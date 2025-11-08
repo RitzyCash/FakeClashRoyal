@@ -394,14 +394,39 @@
 
     <script>
         const CARDS = [
-            {name: 'Knight', cost: 3, hp: 600, damage: 80, speed: 2, range: 1, icon: '🛡️'},
-            {name: 'Archer', cost: 3, hp: 200, damage: 50, speed: 2, range: 150, icon: '🏹'},
-            {name: 'Giant', cost: 5, hp: 1200, damage: 100, speed: 1, range: 1, icon: '🗿'},
-            {name: 'Goblin', cost: 2, hp: 100, damage: 40, speed: 3, range: 1, icon: '👺'},
-            {name: 'Wizard', cost: 5, hp: 300, damage: 120, speed: 2, range: 180, icon: '🧙'},
-            {name: 'Mini PEKKA', cost: 4, hp: 600, damage: 150, speed: 2, range: 1, icon: '🤖'},
-            {name: 'Musketeer', cost: 4, hp: 350, damage: 80, speed: 2, range: 200, icon: '🔫'},
-            {name: 'Hog Rider', cost: 4, hp: 800, damage: 120, speed: 3.5, range: 1, icon: '🐗'}
+            {name: 'Knight', cost: 3, hp: 600, damage: 80, speed: 2, range: 1, icon: '🛡️', type: 'troop'},
+            {name: 'Archer', cost: 3, hp: 200, damage: 50, speed: 2, range: 150, icon: '🏹', type: 'troop'},
+            {name: 'Giant', cost: 5, hp: 1200, damage: 100, speed: 1, range: 1, icon: '🗿', type: 'troop'},
+            {name: 'Goblin', cost: 2, hp: 100, damage: 40, speed: 3, range: 1, icon: '👺', type: 'troop'},
+            {name: 'Wizard', cost: 5, hp: 300, damage: 120, speed: 2, range: 180, icon: '🧙', type: 'troop'},
+            {name: 'Mini PEKKA', cost: 4, hp: 600, damage: 150, speed: 2, range: 1, icon: '🤖', type: 'troop'},
+            {name: 'Musketeer', cost: 4, hp: 350, damage: 80, speed: 2, range: 200, icon: '🔫', type: 'troop'},
+            {name: 'Hog Rider', cost: 4, hp: 800, damage: 120, speed: 3.5, range: 1, icon: '🐗', type: 'troop'},
+            {name: 'Fireball', cost: 4, damage: 400, radius: 100, icon: '🔥', type: 'spell'},
+            {name: 'Arrows', cost: 3, damage: 200, radius: 120, icon: '🏹', type: 'spell'},
+            {name: 'Lightning', cost: 6, damage: 600, radius: 80, icon: '⚡', type: 'spell'},
+            {name: 'Zap', cost: 2, damage: 150, radius: 80, icon: '⚡', type: 'spell'},
+            {name: 'Freeze', cost: 4, duration: 90, radius: 100, icon: '❄️', type: 'spell'},
+            {name: 'Rage', cost: 2, duration: 120, radius: 120, icon: '😡', type: 'spell'},
+            {name: 'Heal', cost: 3, healing: 300, duration: 60, radius: 100, icon: '💚', type: 'spell'},
+            {name: 'Poison', cost: 4, damage: 25, duration: 180, radius: 110, icon: '☠️', type: 'spell'},
+            {name: 'Baby Dragon', cost: 4, hp: 800, damage: 100, speed: 2, range: 100, icon: '🐲', type: 'troop'},
+            {name: 'Valkyrie', cost: 4, hp: 900, damage: 110, speed: 2, range: 1, icon: '⚔️', type: 'troop'},
+            {name: 'Prince', cost: 5, hp: 1200, damage: 200, speed: 3, range: 1, icon: '🤴', type: 'troop'},
+            {name: 'Witch', cost: 5, hp: 500, damage: 60, speed: 2, range: 150, icon: '🧙‍♀️', type: 'troop'},
+            {name: 'Bomber', cost: 3, hp: 250, damage: 100, speed: 2, range: 120, icon: '💣', type: 'troop'},
+            {name: 'Skeleton Army', cost: 3, hp: 60, damage: 60, speed: 3, range: 1, icon: '💀', type: 'swarm', count: 8},
+            {name: 'Minion Horde', cost: 5, hp: 150, damage: 50, speed: 3, range: 80, icon: '🦇', type: 'swarm', count: 6},
+            {name: 'Goblin Gang', cost: 3, hp: 120, damage: 50, speed: 3, range: 1, icon: '👹', type: 'swarm', count: 5},
+            {name: 'Balloon', cost: 5, hp: 1000, damage: 500, speed: 2, range: 1, icon: '🎈', type: 'troop'},
+            {name: 'P.E.K.K.A', cost: 7, hp: 2400, damage: 400, speed: 1.5, range: 1, icon: '🤖', type: 'troop'},
+            {name: 'Golem', cost: 8, hp: 3000, damage: 120, speed: 1, range: 1, icon: '🗿', type: 'troop'},
+            {name: 'Miner', cost: 3, hp: 500, damage: 80, speed: 2, range: 1, icon: '⛏️', type: 'troop'},
+            {name: 'Inferno Dragon', cost: 4, hp: 800, damage: 50, speed: 2, range: 100, icon: '🐉', type: 'troop'},
+            {name: 'Sparky', cost: 6, hp: 1000, damage: 800, speed: 1, range: 120, icon: '⚡', type: 'troop'},
+            {name: 'Rocket', cost: 6, damage: 800, radius: 80, icon: '🚀', type: 'spell'},
+            {name: 'Mirror', cost: 1, icon: '🪞', type: 'special'},
+            {name: 'Clone', cost: 3, radius: 100, icon: '👥', type: 'spell'}
         ];
 
         let gameState = {
@@ -424,6 +449,8 @@
             medium: {aiDelay: 3000, aiElixirMult: 1},
             hard: {aiDelay: 2000, aiElixirMult: 1.2}
         };
+
+        let lastPlayedCard = null;
 
         function startGame(difficulty) {
             gameState.difficulty = difficulty;
@@ -515,14 +542,31 @@
                 const card = gameState.deck[gameState.selectedCard];
                 const arena = document.getElementById('arena');
                 const rect = arena.getBoundingClientRect();
+                const x = e.clientX - rect.left;
                 const y = e.clientY - rect.top;
                 
-                // Only allow placement in player's half (bottom half)
-                if (y > arena.offsetHeight / 2) {
+                // Only allow placement in player's half (bottom half) for troops
+                const canPlace = card.type === 'spell' || card.type === 'special' || y > arena.offsetHeight / 2;
+                
+                if (canPlace) {
                     if (gameState.elixir >= card.cost) {
-                        spawnUnit(e.clientX - rect.left, y, card, true);
+                        if (card.type === 'troop') {
+                            spawnUnit(x, y, card, true);
+                        } else if (card.type === 'swarm') {
+                            spawnSwarm(x, y, card, true);
+                        } else if (card.type === 'spell') {
+                            castSpell(x, y, card, true);
+                        } else if (card.type === 'special') {
+                            useSpecial(x, y, card, true);
+                        }
+                        
                         gameState.elixir -= card.cost;
                         updateElixir();
+                        
+                        // Save for mirror
+                        if (card.name !== 'Mirror') {
+                            lastPlayedCard = {...card};
+                        }
                         
                         // Replace card
                         const newCard = CARDS[Math.floor(Math.random() * CARDS.length)];
@@ -547,6 +591,9 @@
                 name: card.name,
                 icon: card.icon,
                 attackCooldown: 0,
+                frozen: 0,
+                rageBoost: 0,
+                poisoned: 0,
                 element: document.createElement('div')
             };
             
@@ -556,6 +603,138 @@
             unit.element.style.top = y + 'px';
             document.getElementById('arena').appendChild(unit.element);
             gameState.units.push(unit);
+        }
+
+        function spawnSwarm(x, y, card, isPlayer) {
+            const count = card.count || 5;
+            const radius = 40;
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 * i) / count;
+                const offsetX = Math.cos(angle) * radius;
+                const offsetY = Math.sin(angle) * radius;
+                spawnUnit(x + offsetX, y + offsetY, card, isPlayer);
+            }
+        }
+
+        function castSpell(x, y, card, isPlayer) {
+            // Visual effect
+            const effect = document.createElement('div');
+            effect.style.position = 'absolute';
+            effect.style.left = (x - card.radius) + 'px';
+            effect.style.top = (y - card.radius) + 'px';
+            effect.style.width = (card.radius * 2) + 'px';
+            effect.style.height = (card.radius * 2) + 'px';
+            effect.style.borderRadius = '50%';
+            effect.style.pointerEvents = 'none';
+            effect.style.zIndex = '50';
+            
+            if (card.name === 'Fireball') {
+                effect.style.background = 'radial-gradient(circle, rgba(255,100,0,0.8), rgba(255,0,0,0.4))';
+            } else if (card.name === 'Arrows') {
+                effect.style.background = 'radial-gradient(circle, rgba(139,69,19,0.6), rgba(101,67,33,0.2))';
+            } else if (card.name === 'Lightning') {
+                effect.style.background = 'radial-gradient(circle, rgba(255,255,0,0.9), rgba(255,215,0,0.4))';
+            } else if (card.name === 'Zap') {
+                effect.style.background = 'radial-gradient(circle, rgba(100,200,255,0.8), rgba(0,150,255,0.3))';
+            } else if (card.name === 'Freeze') {
+                effect.style.background = 'radial-gradient(circle, rgba(0,200,255,0.6), rgba(200,230,255,0.3))';
+            } else if (card.name === 'Rage') {
+                effect.style.background = 'radial-gradient(circle, rgba(255,0,150,0.6), rgba(200,0,100,0.3))';
+            } else if (card.name === 'Heal') {
+                effect.style.background = 'radial-gradient(circle, rgba(0,255,100,0.6), rgba(100,255,150,0.3))';
+            } else if (card.name === 'Poison') {
+                effect.style.background = 'radial-gradient(circle, rgba(100,255,0,0.5), rgba(50,200,0,0.2))';
+            } else if (card.name === 'Rocket') {
+                effect.style.background = 'radial-gradient(circle, rgba(255,50,0,0.9), rgba(200,0,0,0.5))';
+            } else if (card.name === 'Clone') {
+                effect.style.background = 'radial-gradient(circle, rgba(200,0,255,0.6), rgba(150,0,200,0.3))';
+            }
+            
+            effect.style.animation = 'spellEffect 0.5s ease-out';
+            document.getElementById('arena').appendChild(effect);
+            setTimeout(() => effect.remove(), 500);
+
+            // Apply spell effects
+            if (card.name === 'Freeze') {
+                applyAreaEffect(x, y, card.radius, (target) => {
+                    if (target.isPlayer !== isPlayer) {
+                        target.frozen = card.duration;
+                        target.element.style.filter = 'brightness(0.7) saturate(0.5)';
+                    }
+                });
+            } else if (card.name === 'Rage') {
+                applyAreaEffect(x, y, card.radius, (target) => {
+                    if (target.isPlayer === isPlayer) {
+                        target.rageBoost = card.duration;
+                        target.element.style.filter = 'brightness(1.3) saturate(1.5)';
+                    }
+                });
+            } else if (card.name === 'Heal') {
+                applyAreaEffect(x, y, card.radius, (target) => {
+                    if (target.isPlayer === isPlayer) {
+                        target.hp = Math.min(target.maxHp, target.hp + card.healing);
+                    }
+                });
+            } else if (card.name === 'Poison') {
+                const poisonZone = {
+                    x, y, radius: card.radius, duration: card.duration,
+                    damage: card.damage, isPlayer, tickCounter: 0
+                };
+                gameState.poisonZones = gameState.poisonZones || [];
+                gameState.poisonZones.push(poisonZone);
+            } else {
+                // Damage spells
+                applyAreaEffect(x, y, card.radius, (target) => {
+                    if (target.isPlayer !== isPlayer) {
+                        dealDamage(target, card.damage, target.x || (target.x + 30), target.y || (target.y + 40));
+                    }
+                });
+            }
+        }
+
+        function useSpecial(x, y, card, isPlayer) {
+            if (card.name === 'Mirror' && lastPlayedCard) {
+                const mirrorCard = {...lastPlayedCard};
+                if (mirrorCard.type === 'troop') {
+                    spawnUnit(x, y, mirrorCard, isPlayer);
+                } else if (mirrorCard.type === 'swarm') {
+                    spawnSwarm(x, y, mirrorCard, isPlayer);
+                } else if (mirrorCard.type === 'spell') {
+                    castSpell(x, y, mirrorCard, isPlayer);
+                }
+            } else if (card.name === 'Clone') {
+                applyAreaEffect(x, y, card.radius, (target) => {
+                    if (target.isPlayer === isPlayer && target.hp > 0) {
+                        const cloneCard = {
+                            name: target.name,
+                            hp: target.hp,
+                            damage: target.damage,
+                            speed: target.speed,
+                            range: target.range,
+                            icon: target.icon
+                        };
+                        spawnUnit(target.x + 20, target.y + 20, cloneCard, isPlayer);
+                    }
+                });
+            }
+        }
+
+        function applyAreaEffect(x, y, radius, callback) {
+            // Apply to units
+            gameState.units.forEach(unit => {
+                const dist = Math.sqrt((unit.x - x) ** 2 + (unit.y - y) ** 2);
+                if (dist <= radius) {
+                    callback(unit);
+                }
+            });
+
+            // Apply to towers
+            gameState.towers.forEach(tower => {
+                const dist = Math.sqrt((tower.x + 30 - x) ** 2 + (tower.y + 40 - y) ** 2);
+                if (dist <= radius) {
+                    callback(tower);
+                }
+            });
         }
 
         function startElixirGeneration() {
@@ -619,9 +798,41 @@
         function gameLoop() {
             if (!gameState.gameRunning) return;
 
+            // Update poison zones
+            if (gameState.poisonZones) {
+                gameState.poisonZones.forEach(zone => {
+                    zone.tickCounter++;
+                    if (zone.tickCounter % 30 === 0) { // Damage every 30 frames
+                        applyAreaEffect(zone.x, zone.y, zone.radius, (target) => {
+                            if (target.isPlayer !== zone.isPlayer) {
+                                dealDamage(target, zone.damage, target.x || (target.x + 30), target.y || (target.y + 40));
+                            }
+                        });
+                    }
+                    zone.duration--;
+                });
+                gameState.poisonZones = gameState.poisonZones.filter(z => z.duration > 0);
+            }
+
             // Update units
             gameState.units.forEach(unit => {
                 if (unit.hp <= 0) return;
+
+                // Update status effects
+                if (unit.frozen > 0) {
+                    unit.frozen--;
+                    if (unit.frozen === 0) {
+                        unit.element.style.filter = '';
+                    }
+                    return; // Skip movement and attack when frozen
+                }
+
+                if (unit.rageBoost > 0) {
+                    unit.rageBoost--;
+                    if (unit.rageBoost === 0) {
+                        unit.element.style.filter = '';
+                    }
+                }
 
                 // Find target
                 let target = findTarget(unit);
@@ -633,15 +844,17 @@
 
                     if (dist <= unit.range) {
                         // Attack
+                        const attackSpeed = unit.rageBoost > 0 ? 20 : 30;
                         if (unit.attackCooldown <= 0) {
                             attack(unit, target);
-                            unit.attackCooldown = 30;
+                            unit.attackCooldown = attackSpeed;
                         }
                     } else {
                         // Move towards target
                         const angle = Math.atan2(dy, dx);
-                        unit.x += Math.cos(angle) * unit.speed;
-                        unit.y += Math.sin(angle) * unit.speed;
+                        const moveSpeed = unit.rageBoost > 0 ? unit.speed * 1.5 : unit.speed;
+                        unit.x += Math.cos(angle) * moveSpeed;
+                        unit.y += Math.sin(angle) * moveSpeed;
                     }
                 }
 
