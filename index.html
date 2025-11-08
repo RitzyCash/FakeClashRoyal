@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clash Royale</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .menu {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 400px;
+        }
+
+        .menu h1 {
+            color: #ffd700;
+            font-size: 48px;
+            margin-bottom: 30px;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.5);
+        }
+
+        .menu button {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .menu button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(245, 87, 108, 0.5);
+        }
+
+        #gameContainer {
+            display: none;
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #arena {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(180deg, #4a90e2 0%, #8b4513 50%, #e74c3c 100%);
+            overflow: hidden;
+        }
+
+        .bridge {
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 50%;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%);
+        }
+
+        .tower {
+            position: absolute;
+            width: 60px;
+            height: 80px;
+            background: linear-gradient(135deg, #8b4513, #a0522d);
+            border-radius: 10px 10px 0 0;
+            border: 3px solid #654321;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .tower.player {
+            background: linear-gradient(135deg, #2196F3, #1976D2);
+            border-color: #0D47A1;
+        }
+
+        .tower::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 30px solid transparent;
+            border-right: 30px solid transparent;
+            border-bottom: 20px solid #654321;
+        }
+
+        .tower.player::before {
+            border-bottom-color: #0D47A1;
+        }
+
+        .tower-hp {
+            position: absolute;
+            bottom: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            white-space: nowrap;
+        }
+
+        .unit {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 12px;
+            transition: all 0.1s;
+            cursor: pointer;
+        }
+
+        .unit.player {
+            background: radial-gradient(circle, #2196F3, #1565C0);
+            border: 2px solid #0D47A1;
+        }
+
+        .unit.enemy {
+            background: radial-gradient(circle, #f44336, #c62828);
+            border: 2px solid #b71c1c;
+        }
+
+        .projectile {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: #ffd700;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #ffd700;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #cardDeck {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+
+        .card {
+            width: 80px;
+            height: 100px;
+            background: linear-gradient(135deg, #6a1b9a, #9c27b0);
+            border-radius: 10px;
+            border: 3px solid #4a148c;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.6);
+        }
+
+        .card.selected {
+            transform: translateY(-20px);
+            border-color: #ffd700;
+            box-shadow: 0 0 20px #ffd700;
+        }
+
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .card-cost {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #ff4081;
+            color: white;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .card-name {
+            font-size: 11px;
+            margin-top: 10px;
+        }
+
+        .card-icon {
+            font-size: 28px;
+        }
+
+        #elixir {
+            position: absolute;
+            bottom: 130px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(156, 39, 176, 0.9);
+            padding: 10px 20px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+        }
+
+        .elixir-bar {
+            width: 200px;
+            height: 10px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .elixir-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #e91e63, #ff4081);
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+
+        .game-over {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            color: white;
+            z-index: 200;
+            display: none;
+        }
+
+        .game-over h2 {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .game-over.victory h2 {
+            color: #4CAF50;
+        }
+
+        .game-over.defeat h2 {
+            color: #f44336;
+        }
+
+        .game-over button {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 18px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .damage-text {
+            position: absolute;
+            color: #ff4444;
+            font-weight: bold;
+            font-size: 20px;
+            animation: damageFloat 1s forwards;
+            pointer-events: none;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+        }
+
+        @keyframes damageFloat {
+            0% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+        }
+
+        #crownCount {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .crown-display {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .crown {
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <div class="menu" id="menu">
+        <h1>⚔️ CLASH ROYALE</h1>
+        <button onclick="startGame('easy')">Easy Mode</button>
+        <button onclick="startGame('medium')">Medium Mode</button>
+        <button onclick="startGame('hard')">Hard Mode</button>
+    </div>
+
+    <div id="gameContainer">
+        <div id="arena">
+            <div class="bridge"></div>
+        </div>
+        <div id="hud">
+            <div id="crownCount">
+                <div class="crown-display">
+                    <span class="crown">👑</span>
+                    <span id="playerCrowns">0</span>
+                </div>
+                <div>YOU</div>
+            </div>
+            <div id="timer">3:00</div>
+            <div id="crownCount">
+                <div>ENEMY</div>
+                <div class="crown-display">
+                    <span id="enemyCrowns">0</span>
+                    <span class="crown">👑</span>
+                </div>
+            </div>
+        </div>
+        <div id="elixir">
+            Elixir: <span id="elixirCount">0</span>/10
+            <div class="elixir-bar">
+                <div class="elixir-fill" id="elixirFill"></div>
+            </div>
+        </div>
+        <div id="cardDeck"></div>
+    </div>
+
+    <div class="game-over" id="gameOver">
+        <h2 id="gameOverText">VICTORY!</h2>
+        <p id="gameOverStats"></p>
+        <button onclick="location.reload()">Play Again</button>
+    </div>
+
+    <script>
+        const CARDS = [
+            {name: 'Knight', cost: 3, hp: 600, damage: 80, speed: 2, range: 1, icon: '🛡️'},
+            {name: 'Archer', cost: 3, hp: 200, damage: 50, speed: 2, range: 150, icon: '🏹'},
+            {name: 'Giant', cost: 5, hp: 1200, damage: 100, speed: 1, range: 1, icon: '🗿'},
+            {name: 'Goblin', cost: 2, hp: 100, damage: 40, speed: 3, range: 1, icon: '👺'},
+            {name: 'Wizard', cost: 5, hp: 300, damage: 120, speed: 2, range: 180, icon: '🧙'},
+            {name: 'Mini PEKKA', cost: 4, hp: 600, damage: 150, speed: 2, range: 1, icon: '🤖'},
+            {name: 'Musketeer', cost: 4, hp: 350, damage: 80, speed: 2, range: 200, icon: '🔫'},
+            {name: 'Hog Rider', cost: 4, hp: 800, damage: 120, speed: 3.5, range: 1, icon: '🐗'}
+        ];
+
+        let gameState = {
+            difficulty: 'medium',
+            elixir: 5,
+            maxElixir: 10,
+            playerCrowns: 0,
+            enemyCrowns: 0,
+            timeLeft: 180,
+            units: [],
+            projectiles: [],
+            towers: [],
+            selectedCard: null,
+            deck: [],
+            gameRunning: false
+        };
+
+        const difficultySettings = {
+            easy: {aiDelay: 4000, aiElixirMult: 0.8},
+            medium: {aiDelay: 3000, aiElixirMult: 1},
+            hard: {aiDelay: 2000, aiElixirMult: 1.2}
+        };
+
+        function startGame(difficulty) {
+            gameState.difficulty = difficulty;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameContainer').style.display = 'block';
+            initGame();
+        }
+
+        function initGame() {
+            gameState.gameRunning = true;
+            gameState.elixir = 5;
+            gameState.units = [];
+            gameState.projectiles = [];
+            gameState.towers = [];
+            gameState.playerCrowns = 0;
+            gameState.enemyCrowns = 0;
+            gameState.timeLeft = 180;
+
+            createTowers();
+            createDeck();
+            startElixirGeneration();
+            startTimer();
+            startAI();
+            gameLoop();
+        }
+
+        function createTowers() {
+            const arena = document.getElementById('arena');
+            const arenaWidth = arena.offsetWidth;
+            const arenaHeight = arena.offsetHeight;
+
+            // Player towers (bottom)
+            createTower(arenaWidth / 2 - 30, arenaHeight - 100, 2500, true, true); // King
+            createTower(100, arenaHeight - 200, 1500, true, false); // Left Princess
+            createTower(arenaWidth - 160, arenaHeight - 200, 1500, true, false); // Right Princess
+
+            // Enemy towers (top)
+            createTower(arenaWidth / 2 - 30, 20, 2500, false, true); // King
+            createTower(100, 120, 1500, false, false); // Left Princess
+            createTower(arenaWidth - 160, 120, 1500, false, false); // Right Princess
+        }
+
+        function createTower(x, y, hp, isPlayer, isKing) {
+            const tower = {
+                x, y, hp, maxHp: hp, isPlayer, isKing,
+                element: document.createElement('div')
+            };
+            tower.element.className = 'tower' + (isPlayer ? ' player' : '');
+            tower.element.style.left = x + 'px';
+            tower.element.style.top = y + 'px';
+            tower.element.innerHTML = `<div class="tower-hp">${hp}</div>`;
+            document.getElementById('arena').appendChild(tower.element);
+            gameState.towers.push(tower);
+        }
+
+        function createDeck() {
+            const deck = document.getElementById('cardDeck');
+            deck.innerHTML = '';
+            gameState.deck = [];
+            
+            for (let i = 0; i < 4; i++) {
+                const card = CARDS[Math.floor(Math.random() * CARDS.length)];
+                gameState.deck.push({...card});
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                cardEl.innerHTML = `
+                    <div class="card-cost">${card.cost}</div>
+                    <div class="card-icon">${card.icon}</div>
+                    <div class="card-name">${card.name}</div>
+                `;
+                cardEl.onclick = () => selectCard(i);
+                deck.appendChild(cardEl);
+            }
+        }
+
+        function selectCard(index) {
+            const card = gameState.deck[index];
+            if (gameState.elixir >= card.cost) {
+                document.querySelectorAll('.card').forEach((el, i) => {
+                    el.classList.toggle('selected', i === index);
+                });
+                gameState.selectedCard = index;
+                document.getElementById('arena').style.cursor = 'crosshair';
+            }
+        }
+
+        document.getElementById('arena').addEventListener('click', (e) => {
+            if (gameState.selectedCard !== null) {
+                const card = gameState.deck[gameState.selectedCard];
+                const arena = document.getElementById('arena');
+                const rect = arena.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                
+                // Only allow placement in player's half (bottom half)
+                if (y > arena.offsetHeight / 2) {
+                    if (gameState.elixir >= card.cost) {
+                        spawnUnit(e.clientX - rect.left, y, card, true);
+                        gameState.elixir -= card.cost;
+                        updateElixir();
+                        
+                        // Replace card
+                        const newCard = CARDS[Math.floor(Math.random() * CARDS.length)];
+                        gameState.deck[gameState.selectedCard] = {...newCard};
+                        createDeck();
+                        gameState.selectedCard = null;
+                        document.getElementById('arena').style.cursor = 'default';
+                    }
+                }
+            }
+        });
+
+        function spawnUnit(x, y, card, isPlayer) {
+            const unit = {
+                x, y,
+                hp: card.hp,
+                maxHp: card.hp,
+                damage: card.damage,
+                speed: card.speed,
+                range: card.range,
+                isPlayer,
+                name: card.name,
+                icon: card.icon,
+                attackCooldown: 0,
+                element: document.createElement('div')
+            };
+            
+            unit.element.className = 'unit' + (isPlayer ? ' player' : ' enemy');
+            unit.element.textContent = card.icon;
+            unit.element.style.left = x + 'px';
+            unit.element.style.top = y + 'px';
+            document.getElementById('arena').appendChild(unit.element);
+            gameState.units.push(unit);
+        }
+
+        function startElixirGeneration() {
+            setInterval(() => {
+                if (gameState.gameRunning && gameState.elixir < gameState.maxElixir) {
+                    gameState.elixir = Math.min(gameState.maxElixir, gameState.elixir + 1);
+                    updateElixir();
+                }
+            }, 2800);
+        }
+
+        function updateElixir() {
+            document.getElementById('elixirCount').textContent = Math.floor(gameState.elixir);
+            document.getElementById('elixirFill').style.width = (gameState.elixir / gameState.maxElixir * 100) + '%';
+            
+            document.querySelectorAll('.card').forEach((el, i) => {
+                if (gameState.deck[i] && gameState.elixir < gameState.deck[i].cost) {
+                    el.classList.add('disabled');
+                } else {
+                    el.classList.remove('disabled');
+                }
+            });
+        }
+
+        function startTimer() {
+            setInterval(() => {
+                if (gameState.gameRunning) {
+                    gameState.timeLeft--;
+                    const mins = Math.floor(gameState.timeLeft / 60);
+                    const secs = gameState.timeLeft % 60;
+                    document.getElementById('timer').textContent = 
+                        `${mins}:${secs.toString().padStart(2, '0')}`;
+                    
+                    if (gameState.timeLeft <= 0) {
+                        endGame();
+                    }
+                }
+            }, 1000);
+        }
+
+        function startAI() {
+            const settings = difficultySettings[gameState.difficulty];
+            let aiElixir = 5;
+            
+            setInterval(() => {
+                if (gameState.gameRunning) {
+                    aiElixir = Math.min(10, aiElixir + settings.aiElixirMult);
+                    
+                    const card = CARDS[Math.floor(Math.random() * CARDS.length)];
+                    if (aiElixir >= card.cost) {
+                        const arena = document.getElementById('arena');
+                        const x = Math.random() * (arena.offsetWidth - 100) + 50;
+                        const y = Math.random() * (arena.offsetHeight / 2 - 100) + 50;
+                        spawnUnit(x, y, card, false);
+                        aiElixir -= card.cost;
+                    }
+                }
+            }, settings.aiDelay);
+        }
+
+        function gameLoop() {
+            if (!gameState.gameRunning) return;
+
+            // Update units
+            gameState.units.forEach(unit => {
+                if (unit.hp <= 0) return;
+
+                // Find target
+                let target = findTarget(unit);
+                
+                if (target) {
+                    const dx = target.x - unit.x;
+                    const dy = target.y - unit.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist <= unit.range) {
+                        // Attack
+                        if (unit.attackCooldown <= 0) {
+                            attack(unit, target);
+                            unit.attackCooldown = 30;
+                        }
+                    } else {
+                        // Move towards target
+                        const angle = Math.atan2(dy, dx);
+                        unit.x += Math.cos(angle) * unit.speed;
+                        unit.y += Math.sin(angle) * unit.speed;
+                    }
+                }
+
+                unit.attackCooldown = Math.max(0, unit.attackCooldown - 1);
+                unit.element.style.left = unit.x + 'px';
+                unit.element.style.top = unit.y + 'px';
+            });
+
+            // Update projectiles
+            gameState.projectiles.forEach(proj => {
+                const dx = proj.targetX - proj.x;
+                const dy = proj.targetY - proj.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < 5) {
+                    dealDamage(proj.target, proj.damage, proj.x, proj.y);
+                    proj.element.remove();
+                    proj.dead = true;
+                } else {
+                    const angle = Math.atan2(dy, dx);
+                    proj.x += Math.cos(angle) * 5;
+                    proj.y += Math.sin(angle) * 5;
+                    proj.element.style.left = proj.x + 'px';
+                    proj.element.style.top = proj.y + 'px';
+                }
+            });
+
+            // Clean up dead entities
+            gameState.units = gameState.units.filter(u => {
+                if (u.hp <= 0) {
+                    u.element.remove();
+                    return false;
+                }
+                return true;
+            });
+
+            gameState.projectiles = gameState.projectiles.filter(p => !p.dead);
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function findTarget(unit) {
+            let closest = null;
+            let minDist = Infinity;
+
+            // Check towers
+            gameState.towers.forEach(tower => {
+                if (tower.isPlayer !== unit.isPlayer && tower.hp > 0) {
+                    const dist = Math.sqrt((tower.x - unit.x) ** 2 + (tower.y - unit.y) ** 2);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closest = tower;
+                    }
+                }
+            });
+
+            // Check units
+            gameState.units.forEach(other => {
+                if (other.isPlayer !== unit.isPlayer && other.hp > 0) {
+                    const dist = Math.sqrt((other.x - unit.x) ** 2 + (other.y - unit.y) ** 2);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        closest = other;
+                    }
+                }
+            });
+
+            return closest;
+        }
+
+        function attack(unit, target) {
+            if (unit.range > 50) {
+                // Ranged attack - create projectile
+                const proj = {
+                    x: unit.x,
+                    y: unit.y,
+                    targetX: target.x || target.x + 30,
+                    targetY: target.y || target.y + 40,
+                    damage: unit.damage,
+                    target: target,
+                    element: document.createElement('div')
+                };
+                proj.element.className = 'projectile';
+                proj.element.style.left = proj.x + 'px';
+                proj.element.style.top = proj.y + 'px';
+                document.getElementById('arena').appendChild(proj.element);
+                gameState.projectiles.push(proj);
+            } else {
+                // Melee attack
+                dealDamage(target, unit.damage, target.x || target.x + 30, target.y || target.y + 40);
+            }
+        }
+
+        function dealDamage(target, damage, x, y) {
+            target.hp -= damage;
+            
+            // Show damage text
+            const damageText = document.createElement('div');
+            damageText.className = 'damage-text';
+            damageText.textContent = '-' + damage;
+            damageText.style.left = x + 'px';
+            damageText.style.top = y + 'px';
+            document.getElementById('arena').appendChild(damageText);
+            setTimeout(() => damageText.remove(), 1000);
+
+            if (target.element && target.element.querySelector) {
+                const hpEl = target.element.querySelector('.tower-hp');
+                if (hpEl) {
+                    hpEl.textContent = Math.max(0, target.hp);
+                }
+            }
+
+            if (target.hp <= 0 && target.isKing !== undefined) {
+                // Tower destroyed
+                if (target.isKing) {
+                    if (target.isPlayer) {
+                        gameState.enemyCrowns = 3;
+                    } else {
+                        gameState.playerCrowns = 3;
+                    }
+                    endGame();
+                } else {
+                    if (target.isPlayer) {
+                        gameState.enemyCrowns++;
+                    } else {
+                        gameState.playerCrowns++;
+                    }
+                    updateCrowns();
+                }
+                target.element.style.opacity = '0.3';
+            }
+        }
+
+        function updateCrowns() {
+            document.getElementById('playerCrowns').textContent = gameState.playerCrowns;
+            document.getElementById('enemyCrowns').textContent = gameState.enemyCrowns;
+        }
+
+        function endGame() {
+            gameState.gameRunning = false;
+            const gameOver = document.getElementById('gameOver');
+            const text = document.getElementById('gameOverText');
+            const stats = document.getElementById('gameOverStats');
+            
+            if (gameState.playerCrowns > gameState.enemyCrowns) {
+                text.textContent = 'VICTORY!';
+                gameOver.className = 'game-over victory';
+            } else if (gameState.playerCrowns < gameState.enemyCrowns) {
+                text.textContent = 'DEFEAT!';
+                gameOver.className = 'game-over defeat';
+            } else {
+                text.textContent = 'DRAW!';
+                gameOver.className = 'game-over';
+            }
+            
+            stats.textContent = `Final Score: ${gameState.playerCrowns} - ${gameState.enemyCrowns}`;
+            gameOver.style.display = 'block';
+        }
+
+        updateElixir();
+    </script>
+</body>
+</html>
