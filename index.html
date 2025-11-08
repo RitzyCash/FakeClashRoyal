@@ -139,6 +139,7 @@
             font-size: 12px;
             transition: all 0.1s;
             cursor: pointer;
+            pointer-events: none;
         }
 
         .unit.player {
@@ -1051,35 +1052,39 @@
                         // Move towards target with collision avoidance
                         const angle = Math.atan2(dy, dx);
                         const moveSpeed = unit.rageBoost > 0 ? unit.speed * 1.5 : unit.speed;
-                        const newX = unit.x + Math.cos(angle) * moveSpeed;
-                        const newY = unit.y + Math.sin(angle) * moveSpeed;
+                        let newX = unit.x + Math.cos(angle) * moveSpeed;
+                        let newY = unit.y + Math.sin(angle) * moveSpeed;
 
-                        // Check collision with other units
-                        let canMove = true;
+                        // Check collision with other units - push apart
+                        let pushX = 0;
+                        let pushY = 0;
                         for (let other of gameState.units) {
                             if (other !== unit && other.hp > 0) {
-                                const distToOther = Math.sqrt((other.x - newX) ** 2 + (other.y - newY) ** 2);
-                                if (distToOther < 30) {
-                                    canMove = false;
-                                    // Try to move around
-                                    const avoidAngle = angle + (Math.random() > 0.5 ? 0.5 : -0.5);
-                                    unit.x += Math.cos(avoidAngle) * (moveSpeed * 0.5);
-                                    unit.y += Math.sin(avoidAngle) * (moveSpeed * 0.5);
-                                    break;
+                                const dx2 = unit.x - other.x;
+                                const dy2 = unit.y - other.y;
+                                const distToOther = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                                
+                                if (distToOther < 40 && distToOther > 0) {
+                                    // Push away from each other
+                                    const pushForce = (40 - distToOther) / distToOther;
+                                    pushX += dx2 * pushForce * 0.5;
+                                    pushY += dy2 * pushForce * 0.5;
                                 }
                             }
                         }
 
-                        if (canMove) {
-                            unit.x = newX;
-                            unit.y = newY;
-                        }
+                        // Apply movement with separation
+                        unit.x = newX + pushX;
+                        unit.y = newY + pushY;
                     }
                 }
 
                 unit.attackCooldown = Math.max(0, unit.attackCooldown - 1);
                 unit.element.style.left = unit.x + 'px';
                 unit.element.style.top = unit.y + 'px';
+                
+                // Dynamic z-index based on Y position for proper layering
+                unit.element.style.zIndex = Math.floor(unit.y);
             });
 
             // Update projectiles
