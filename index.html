@@ -139,40 +139,97 @@
             font-size: 12px;
             transition: all 0.1s;
             cursor: pointer;
-            pointer-events: none;
+            pointer-events: none; /* Units shouldn't block clicks to the arena */
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            z-index: 50;
+        }
+
+        .unit-hp {
+            position: absolute;
+            top: -10px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: #e74c3c;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .unit-hp-bar {
+            height: 100%;
+            background-color: #2ecc71;
+            transition: width 0.1s linear;
         }
 
         .unit.player {
-            background: radial-gradient(circle, #2196F3, #1565C0);
-            border: 2px solid #0D47A1;
+            background-color: #2980b9;
         }
 
         .unit.enemy {
-            background: radial-gradient(circle, #f44336, #c62828);
-            border: 2px solid #b71c1c;
+            background-color: #c0392b;
         }
 
-        .projectile {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: #ffd700;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #ffd700;
-        }
-
-        #hud {
+        #ui {
             position: absolute;
             top: 0;
             left: 0;
-            right: 0;
-            padding: 15px;
-            background: linear-gradient(180deg, rgba(0,0,0,0.8), transparent);
-            color: white;
+            width: 100%;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            padding: 10px;
             z-index: 100;
+        }
+
+        #elixirBar {
+            background: #000;
+            border: 3px solid #ffd700;
+            border-radius: 20px;
+            width: 250px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            padding: 0 5px;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.7);
+        }
+
+        #elixirAmount {
+            height: 80%;
+            background: linear-gradient(to right, #9b59b6, #8e44ad);
+            border-radius: 15px;
+            transition: width 0.5s ease-out;
+        }
+
+        #elixirText {
+            position: absolute;
+            width: 250px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 18px;
+            text-shadow: 1px 1px 3px #000;
+        }
+
+        #stats {
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 5px 15px;
+            background: rgba(0,0,0,0.5);
+            border-radius: 10px;
+        }
+
+        .crowns {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .crown {
+            font-size: 24px;
         }
 
         #cardDeck {
@@ -188,29 +245,23 @@
         .card {
             width: 80px;
             height: 100px;
-            background: linear-gradient(135deg, #6a1b9a, #9c27b0);
+            background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
+            border: 4px solid #f39c12;
             border-radius: 10px;
-            border: 3px solid #4a148c;
-            cursor: pointer;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
+            justify-content: space-around;
+            cursor: pointer;
             position: relative;
+            transition: transform 0.1s, box-shadow 0.1s;
+            user-select: none;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
-        .card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(156, 39, 176, 0.6);
-        }
-
-        .card.selected {
-            transform: translateY(-20px);
-            border-color: #ffd700;
-            box-shadow: 0 0 20px #ffd700;
+        .card:hover:not(.disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(243, 156, 18, 0.5);
         }
 
         .card.disabled {
@@ -220,157 +271,121 @@
 
         .card-cost {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            background: #ff4081;
+            top: -10px;
+            left: -10px;
+            background: #3498db;
             color: white;
+            border: 3px solid #2980b9;
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
             font-weight: bold;
-        }
-
-        .card-name {
-            font-size: 11px;
-            margin-top: 10px;
+            font-size: 14px;
+            z-index: 1;
         }
 
         .card-icon {
-            font-size: 28px;
+            font-size: 30px;
         }
 
-        .card-type-badge {
+        /* --- START OF MODIFIED CSS --- */
+        .card-name {
+            font-size: 12px;
+            font-weight: bold;
+            color: white;
+            /* Update to center text and emoji horizontally */
+            display: flex; 
+            align-items: center;
+            justify-content: center;
+            padding-top: 5px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        /* New style for the spell emoji */
+        .spell-emoji {
+            font-size: 14px; /* Adjust size of emoji */
+            margin-right: 3px;
+        }
+        /* --- END OF MODIFIED CSS --- */
+
+        .card-timer {
             position: absolute;
-            top: 5px;
-            left: 5px;
-            background: rgba(255, 255, 255, 0.9);
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-        }
-
-        #elixir {
-            position: absolute;
-            bottom: 130px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(156, 39, 176, 0.9);
-            padding: 10px 20px;
-            border-radius: 20px;
-            color: white;
+            font-size: 24px;
             font-weight: bold;
-            font-size: 18px;
-        }
-
-        .elixir-bar {
-            width: 200px;
-            height: 10px;
-            background: rgba(255,255,255,0.3);
-            border-radius: 5px;
-            margin-top: 5px;
-            overflow: hidden;
-        }
-
-        .elixir-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #e91e63, #ff4081);
-            border-radius: 5px;
-            transition: width 0.3s;
-        }
-
-        .game-over {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.95);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            color: white;
-            z-index: 200;
+            border-radius: 10px;
             display: none;
         }
 
-        .game-over h2 {
-            font-size: 48px;
-            margin-bottom: 20px;
-        }
-
-        .game-over.victory h2 {
-            color: #4CAF50;
-        }
-
-        .game-over.defeat h2 {
-            color: #f44336;
-        }
-
-        .game-over button {
-            background: linear-gradient(135deg, #4CAF50, #45a049);
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            margin: 10px;
-            font-size: 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-weight: bold;
-        }
-
-        .damage-text {
+        .spell-effect {
             position: absolute;
-            color: #ff4444;
-            font-weight: bold;
-            font-size: 20px;
-            animation: damageFloat 1s forwards;
+            border-radius: 50%;
             pointer-events: none;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 80;
         }
 
-        @keyframes damageFloat {
-            0% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-            100% {
-                opacity: 0;
-                transform: translateY(-50px);
-            }
-        }
-
-        @keyframes spellEffect {
-            0% {
-                transform: scale(0);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(1);
-                opacity: 0;
-            }
-        }
-
-        #crownCount {
-            display: flex;
-            gap: 30px;
+        #gameOver {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: none;
+            flex-direction: column;
             align-items: center;
+            justify-content: center;
+            text-align: center;
+            z-index: 200;
         }
 
-        .crown-display {
-            display: flex;
-            align-items: center;
-            gap: 5px;
+        #gameOver.victory {
+            background: rgba(46, 204, 113, 0.9);
         }
 
-        .crown {
-            font-size: 24px;
+        #gameOver.defeat {
+            background: rgba(231, 76, 60, 0.9);
+        }
+
+        #gameOverText {
+            font-size: 80px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            text-shadow: 4px 4px 8px rgba(0,0,0,0.8);
+        }
+
+        #gameOverStats {
+            font-size: 30px;
+            margin-bottom: 40px;
+        }
+
+        #restartButton {
+            background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
+            padding: 15px 40px;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        #restartButton:hover {
+            background: linear-gradient(135deg, #2980b9 0%, #3498db 100%);
         }
     </style>
 </head>
@@ -386,237 +401,358 @@
         <div id="arena">
             <div class="bridge"></div>
         </div>
-        <div id="hud">
-            <div id="crownCount">
-                <div class="crown-display">
-                    <span class="crown">👑</span>
-                    <span id="playerCrowns">0</span>
-                </div>
-                <div>YOU</div>
-            </div>
-            <div id="timer">3:00</div>
-            <div id="crownCount">
-                <div>ENEMY</div>
-                <div class="crown-display">
-                    <span id="enemyCrowns">0</span>
-                    <span class="crown">👑</span>
-                </div>
-            </div>
-        </div>
-        <div id="elixir">
-            Elixir: <span id="elixirCount">0</span>/10
-            <div class="elixir-bar">
-                <div class="elixir-fill" id="elixirFill"></div>
-            </div>
-        </div>
-        <div id="cardDeck"></div>
-    </div>
 
-    <div class="game-over" id="gameOver">
-        <h2 id="gameOverText">VICTORY!</h2>
-        <p id="gameOverStats"></p>
-        <button onclick="location.reload()">Play Again</button>
+        <div id="ui">
+            <div id="elixirBar">
+                <div id="elixirAmount"></div>
+                <div id="elixirText">0/10</div>
+            </div>
+            <div id="stats">
+                <div class="crowns player">
+                    <span class="crown" id="playerCrowns">0</span>
+                    <span class="crown">👑</span>
+                </div>
+                <div class="crowns enemy">
+                    <span class="crown">👑</span>
+                    <span class="crown" id="enemyCrowns">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="cardDeck">
+            </div>
+
+        <div id="gameOver">
+            <div id="gameOverText">VICTORY!</div>
+            <div id="gameOverStats">Final Score: 3 - 1</div>
+            <button id="restartButton" onclick="location.reload()">PLAY AGAIN</button>
+        </div>
     </div>
 
     <script>
-        const CARDS = [
-            {name: 'Knight', cost: 3, hp: 600, damage: 80, speed: 2, range: 1, icon: '🛡️', type: 'troop'},
-            {name: 'Archer', cost: 3, hp: 200, damage: 50, speed: 2, range: 150, icon: '🏹', type: 'troop'},
-            {name: 'Giant', cost: 5, hp: 1200, damage: 100, speed: 1, range: 1, icon: '🗿', type: 'troop'},
-            {name: 'Goblin', cost: 2, hp: 100, damage: 40, speed: 3, range: 1, icon: '👺', type: 'troop'},
-            {name: 'Wizard', cost: 5, hp: 300, damage: 120, speed: 2, range: 180, icon: '🧙', type: 'troop'},
-            {name: 'Mini PEKKA', cost: 4, hp: 600, damage: 150, speed: 2, range: 1, icon: '🤖', type: 'troop'},
-            {name: 'Musketeer', cost: 4, hp: 350, damage: 80, speed: 2, range: 200, icon: '🔫', type: 'troop'},
-            {name: 'Hog Rider', cost: 4, hp: 800, damage: 120, speed: 3.5, range: 1, icon: '🐗', type: 'troop'},
-            {name: 'Fireball', cost: 4, damage: 400, radius: 100, icon: '🔥', type: 'spell'},
-            {name: 'Arrows', cost: 3, damage: 200, radius: 120, icon: '🏹', type: 'spell'},
-            {name: 'Lightning', cost: 6, damage: 600, radius: 80, icon: '⚡', type: 'spell'},
-            {name: 'Zap', cost: 2, damage: 150, radius: 80, icon: '⚡', type: 'spell'},
-            {name: 'Freeze', cost: 4, duration: 90, radius: 100, icon: '❄️', type: 'spell'},
-            {name: 'Rage', cost: 2, duration: 120, radius: 120, icon: '😡', type: 'spell'},
-            {name: 'Heal', cost: 3, healing: 300, duration: 60, radius: 100, icon: '💚', type: 'spell'},
-            {name: 'Poison', cost: 4, damage: 25, duration: 180, radius: 110, icon: '☠️', type: 'spell'},
-            {name: 'Baby Dragon', cost: 4, hp: 800, damage: 100, speed: 2, range: 100, icon: '🐲', type: 'troop'},
-            {name: 'Valkyrie', cost: 4, hp: 900, damage: 110, speed: 2, range: 1, icon: '⚔️', type: 'troop'},
+        const arena = document.getElementById('arena');
+        const gameContainer = document.getElementById('gameContainer');
+        const menu = document.getElementById('menu');
+        const elixirAmountEl = document.getElementById('elixirAmount');
+        const elixirTextEl = document.getElementById('elixirText');
+        const cardDeckEl = document.getElementById('cardDeck');
+
+        // Game State and Constants
+        const CARD_LIST = [
+            {name: 'Knight', cost: 3, hp: 1000, damage: 150, speed: 2, range: 1, icon: '🛡️', type: 'troop'},
+            {name: 'Archers', cost: 3, hp: 200, damage: 50, speed: 2, range: 500, icon: '🏹', type: 'troop'},
+            {name: 'Giant', cost: 5, hp: 2500, damage: 100, speed: 1, range: 1, icon: '🪨', type: 'troop'},
             {name: 'Prince', cost: 5, hp: 1200, damage: 200, speed: 3, range: 1, icon: '🤴', type: 'troop'},
             {name: 'Witch', cost: 5, hp: 500, damage: 60, speed: 2, range: 150, icon: '🧙‍♀️', type: 'troop'},
-            {name: 'Bomber', cost: 3, hp: 250, damage: 100, speed: 2, range: 120, icon: '💣', type: 'troop'},
-            {name: 'Skeleton Army', cost: 3, hp: 60, damage: 60, speed: 3, range: 1, icon: '💀', type: 'swarm', count: 8},
-            {name: 'Minion Horde', cost: 5, hp: 150, damage: 50, speed: 3, range: 80, icon: '🦇', type: 'swarm', count: 6},
-            {name: 'Goblin Gang', cost: 3, hp: 120, damage: 50, speed: 3, range: 1, icon: '👹', type: 'swarm', count: 5},
-            {name: 'Balloon', cost: 5, hp: 1000, damage: 500, speed: 2, range: 1, icon: '🎈', type: 'troop'},
-            {name: 'P.E.K.K.A', cost: 7, hp: 2400, damage: 400, speed: 1.5, range: 1, icon: '🤖', type: 'troop'},
-            {name: 'Golem', cost: 8, hp: 3000, damage: 120, speed: 1, range: 1, icon: '🗿', type: 'troop'},
-            {name: 'Miner', cost: 3, hp: 500, damage: 80, speed: 2, range: 1, icon: '⛏️', type: 'troop'},
-            {name: 'Inferno Dragon', cost: 4, hp: 800, damage: 50, speed: 2, range: 100, icon: '🐉', type: 'troop'},
-            {name: 'Sparky', cost: 6, hp: 1000, damage: 800, speed: 1, range: 120, icon: '⚡', type: 'troop'},
-            {name: 'Rocket', cost: 6, damage: 800, radius: 80, icon: '🚀', type: 'spell'},
-            {name: 'Mirror', cost: 1, icon: '🪞', type: 'special'},
-            {name: 'Clone', cost: 3, radius: 100, icon: '👥', type: 'spell'}
+            {name: 'Bomber', cost: 3, hp: 300, damage: 170, speed: 2, range: 100, icon: '💣', type: 'troop'},
+            {name: 'Fireball', cost: 4, damage: 500, radius: 150, icon: '🔥', type: 'spell'},
+            {name: 'Arrows', cost: 3, damage: 200, radius: 300, icon: '🎯', type: 'spell'},
+            {name: 'Rage', cost: 2, duration: 8, radius: 200, icon: '😡', type: 'spell'},
+            {name: 'Heal', cost: 3, duration: 3, radius: 200, icon: '💚', type: 'spell'}
         ];
 
         let gameState = {
-            difficulty: 'medium',
+            gameRunning: false,
             elixir: 5,
             maxElixir: 10,
+            elixirRate: 1.4, // seconds per elixir point
+            elixirInterval: null,
+            deck: [],
+            hand: [],
+            discard: [],
+            units: [],
+            towers: [],
+            effects: [],
             playerCrowns: 0,
             enemyCrowns: 0,
-            timeLeft: 180,
-            units: [],
-            projectiles: [],
-            towers: [],
-            selectedCard: null,
-            deck: [],
-            gameRunning: false
+            gameDuration: 180, // 3 minutes
+            difficulty: 'medium',
+            lastCardPlayed: 0
         };
 
-        const difficultySettings = {
-            easy: {aiDelay: 4000, aiElixirMult: 0.8},
-            medium: {aiDelay: 3000, aiElixirMult: 1},
-            hard: {aiDelay: 2000, aiElixirMult: 1.2}
-        };
+        const CARD_CYCLE_TIME = 1000; // Time in ms before a card can cycle back in
+        const AI_THINK_INTERVAL = 1000;
 
-        let lastPlayedCard = null;
+        function getRandomCards(count) {
+            const shuffled = CARD_LIST.slice().sort(() => 0.5 - Math.random());
+            return shuffled.slice(0, count);
+        }
+
+        function createDeckAndHand() {
+            // Player deck and hand
+            gameState.deck = getRandomCards(8);
+            gameState.hand = gameState.deck.splice(0, 4);
+            gameState.discard = [];
+            
+            // Enemy deck (simplified for this version)
+            gameState.enemyDeck = getRandomCards(8);
+        }
 
         function startGame(difficulty) {
             gameState.difficulty = difficulty;
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('gameContainer').style.display = 'block';
-            initGame();
-        }
-
-        function initGame() {
+            menu.style.display = 'none';
+            gameContainer.style.display = 'block';
             gameState.gameRunning = true;
-            gameState.elixir = 5;
-            gameState.units = [];
-            gameState.projectiles = [];
-            gameState.towers = [];
-            gameState.playerCrowns = 0;
-            gameState.enemyCrowns = 0;
-            gameState.timeLeft = 180;
-
+            
+            createDeckAndHand();
             createTowers();
-            createDeck();
-            startElixirGeneration();
-            startTimer();
-            startAI();
-            gameLoop();
+            updateElixir();
+            updateCrowns();
+            renderHand();
+            
+            gameState.elixirInterval = setInterval(startElixirGeneration, 1000); // Start the main elixir tick
+            setInterval(gameLoop, 100); // Main game loop (10 times per second)
+            setInterval(aiThink, AI_THINK_INTERVAL); // AI logic
+            
+            setTimeout(() => {
+                // Double elixir at 1:00 remaining
+                gameState.elixirRate = 0.7; 
+            }, (gameState.gameDuration - 60) * 1000);
+
+            setTimeout(() => {
+                // End game after initial duration
+                endGame();
+            }, gameState.gameDuration * 1000);
         }
 
-        function createTowers() {
-            const arena = document.getElementById('arena');
-            const arenaWidth = arena.offsetWidth;
-            const arenaHeight = arena.offsetHeight;
+        function updateElixir() {
+            const percentage = (gameState.elixir / gameState.maxElixir) * 100;
+            elixirAmountEl.style.width = `${percentage}%`;
+            elixirTextEl.textContent = `${Math.floor(gameState.elixir)}/${gameState.maxElixir}`;
+            
+            // Re-render hand to enable/disable cards
+            renderHand();
+        }
 
-            // Player towers (bottom)
-            createTower(arenaWidth / 2 - 30, arenaHeight - 100, 2500, true, true); // King
-            createTower(100, arenaHeight - 200, 1500, true, false); // Left Princess
-            createTower(arenaWidth - 160, arenaHeight - 200, 1500, true, false); // Right Princess
-
-            // Enemy towers (top)
-            createTower(arenaWidth / 2 - 30, 20, 2500, false, true); // King
-            createTower(100, 120, 1500, false, false); // Left Princess
-            createTower(arenaWidth - 160, 120, 1500, false, false); // Right Princess
+        function startElixirGeneration() {
+            if (gameState.gameRunning && gameState.elixir < gameState.maxElixir) {
+                // Logic to increment elixir over time
+                gameState.elixir = Math.min(gameState.maxElixir, gameState.elixir + (1 / gameState.elixirRate));
+                updateElixir();
+            }
         }
 
         function createTower(x, y, hp, isPlayer, isKing) {
             const tower = {
-                x, y, hp, maxHp: hp, isPlayer, isKing,
-                attackCooldown: 0,
+                x: x,
+                y: y,
+                hp: hp,
+                maxHp: hp,
                 damage: 50,
-                range: 200,
+                range: 400,
+                attackCooldown: 0,
+                isPlayer: isPlayer,
+                isKing: isKing,
                 element: document.createElement('div')
             };
-            tower.element.className = 'tower' + (isPlayer ? ' player' : '');
-            tower.element.style.left = x + 'px';
-            tower.element.style.top = y + 'px';
-            tower.element.innerHTML = `<div class="tower-hp">${hp}</div>`;
-            document.getElementById('arena').appendChild(tower.element);
+
+            tower.element.className = `tower ${isPlayer ? 'player' : 'enemy'}`;
+            tower.element.style.left = `${x}px`;
+            tower.element.style.top = `${y}px`;
+            
+            // HP Bar
+            const hpEl = document.createElement('div');
+            hpEl.className = 'tower-hp';
+            hpEl.textContent = `${tower.hp}`;
+            tower.hpEl = hpEl;
+            tower.element.appendChild(hpEl);
+
+            arena.appendChild(tower.element);
             gameState.towers.push(tower);
         }
 
-        function createDeck() {
-            const deck = document.getElementById('cardDeck');
-            deck.innerHTML = '';
-            gameState.deck = [];
+        function createTowers() {
+            gameState.towers = [];
+            const arenaWidth = arena.offsetWidth;
+            const arenaHeight = arena.offsetHeight;
+
+            // Player towers (bottom)
+            createTower(arenaWidth / 2 - 30, arenaHeight - 140, 3000, true, true); // King Tower
+            createTower(100, arenaHeight - 200, 1500, true, false); // Left Princess Tower
+            createTower(arenaWidth - 160, arenaHeight - 200, 1500, true, false); // Right Princess Tower
+
+            // Enemy towers (top)
+            createTower(arenaWidth / 2 - 30, 20, 3000, false, true); // King Tower
+            createTower(100, 100, 1500, false, false); // Left Princess Tower
+            createTower(arenaWidth - 160, 100, 1500, false, false); // Right Princess Tower
+        }
+
+        // --- START OF MODIFIED FUNCTION ---
+        function createCardElement(card) {
+            const cardEl = document.createElement('div');
+            cardEl.className = 'card';
+            cardEl.dataset.name = card.name;
             
-            // Create deck with unique cards
-            const availableCards = [...CARDS];
-            for (let i = 0; i < 4; i++) {
-                const randomIndex = Math.floor(Math.random() * availableCards.length);
-                const card = availableCards.splice(randomIndex, 1)[0];
-                gameState.deck.push({...card});
-                const cardEl = document.createElement('div');
-                cardEl.className = 'card';
-                cardEl.innerHTML = `
-                    <div class="card-cost">${card.cost}</div>
-                    <div class="card-icon">${card.icon}</div>
-                    <div class="card-name">${card.name}</div>
-                `;
-                cardEl.onclick = () => selectCard(i);
-                deck.appendChild(cardEl);
-            }
+            // Add the Magic Wand emoji (🪄) next to spell card names
+            const spellEmoji = card.type === 'spell' ? '<span class="spell-emoji">🪄</span>' : '';
+
+            cardEl.innerHTML = `
+                <div class="card-cost">${card.cost}</div>
+                <div class="card-icon">${card.icon}</div>
+                <div class="card-name">${spellEmoji}${card.name}</div>
+                <div class="card-timer"></div>
+            `;
+            // --- END OF MODIFIED FUNCTION ---
+
+            cardEl.onclick = (event) => {
+                if (cardEl.classList.contains('disabled')) return;
+                
+                // Set the selected card for deployment
+                gameState.selectedCard = card;
+            };
+
+            return cardEl;
         }
 
-        function selectCard(index) {
-            const card = gameState.deck[index];
-            if (gameState.elixir >= card.cost) {
-                document.querySelectorAll('.card').forEach((el, i) => {
-                    el.classList.toggle('selected', i === index);
-                });
-                gameState.selectedCard = index;
-                document.getElementById('arena').style.cursor = 'crosshair';
-            }
+        function renderHand() {
+            cardDeckEl.innerHTML = '';
+            
+            gameState.hand.forEach((card, index) => {
+                const cardEl = createCardElement(card);
+                if (card.cost > gameState.elixir || card.cooldown > 0) {
+                    cardEl.classList.add('disabled');
+                }
+                
+                const timerEl = cardEl.querySelector('.card-timer');
+                if (card.cooldown > 0) {
+                    timerEl.style.display = 'flex';
+                    timerEl.textContent = Math.ceil(card.cooldown / 1000);
+                } else {
+                    timerEl.style.display = 'none';
+                }
+                
+                cardEl.dataset.index = index;
+                cardDeckEl.appendChild(cardEl);
+            });
         }
 
-        document.getElementById('arena').addEventListener('click', (e) => {
-            if (gameState.selectedCard !== null) {
-                const card = gameState.deck[gameState.selectedCard];
-                const arena = document.getElementById('arena');
-                const rect = arena.getBoundingClientRect();
-                const x = e.clientX - rect.left;
-                const y = e.clientY - rect.top;
+        function cycleCard(playedCardIndex) {
+            const card = gameState.hand[playedCardIndex];
+            
+            // 1. Move card to discard pile and start cooldown
+            card.cooldown = CARD_CYCLE_TIME;
+            gameState.discard.push(card);
+            gameState.hand.splice(playedCardIndex, 1);
+            
+            // 2. Draw new card from deck
+            let newCard;
+            if (gameState.deck.length > 0) {
+                newCard = gameState.deck.shift();
+            } else if (gameState.discard.length > 0) {
+                // If deck is empty, shuffle discard back into deck (simplified: just take one from discard)
+                const discardIndex = Math.floor(Math.random() * gameState.discard.length);
+                newCard = gameState.discard.splice(discardIndex, 1)[0];
+            }
+            
+            if (newCard) {
+                gameState.hand.push(newCard);
+            }
+            
+            renderHand();
+        }
+
+        function updateCooldowns(deltaTime) {
+            // Update cooldowns on all cards in the discard pile
+            for (let i = gameState.discard.length - 1; i >= 0; i--) {
+                const card = gameState.discard[i];
+                card.cooldown = Math.max(0, card.cooldown - deltaTime);
                 
-                // Only allow placement in player's half (bottom half) for troops
-                const canPlace = card.type === 'spell' || card.type === 'special' || y > arena.offsetHeight / 2;
-                
-                if (canPlace) {
-                    if (gameState.elixir >= card.cost) {
-                        if (card.type === 'troop') {
-                            spawnUnit(x, y, card, true);
-                        } else if (card.type === 'swarm') {
-                            spawnSwarm(x, y, card, true);
-                        } else if (card.type === 'spell') {
-                            castSpell(x, y, card, true);
-                        } else if (card.type === 'special') {
-                            useSpecial(x, y, card, true);
-                        }
-                        
-                        gameState.elixir -= card.cost;
-                        updateElixir();
-                        
-                        // Save for mirror
-                        if (card.name !== 'Mirror') {
-                            lastPlayedCard = {...card};
-                        }
-                        
-                        // Replace card
-                        const newCard = CARDS[Math.floor(Math.random() * CARDS.length)];
-                        gameState.deck[gameState.selectedCard] = {...newCard};
-                        createDeck();
-                        gameState.selectedCard = null;
-                        document.getElementById('arena').style.cursor = 'default';
-                    }
+                if (card.cooldown === 0) {
+                    // Move card from discard back to deck (ready for next draw)
+                    const readyCard = gameState.discard.splice(i, 1)[0];
+                    gameState.deck.push(readyCard);
                 }
             }
+            
+            // Update timers on cards in hand (only for visual effect, actual draw is from deck)
+            gameState.hand.forEach(card => {
+                // The main card cycling logic handles where the card is when ready, 
+                // this is just for the visual timer on the hand if a card is put back on a short cooldown.
+                // Re-running renderHand() handles visual timer:
+                // renderHand();
+            });
+        }
+
+        function handleCardPlacement(event) {
+            if (!gameState.selectedCard) return;
+
+            const card = gameState.selectedCard;
+            const rect = arena.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const y = event.clientY - rect.top;
+            
+            // Find the card in the hand to get its index
+            const cardIndex = gameState.hand.findIndex(c => c.name === card.name);
+            if (cardIndex === -1) {
+                gameState.selectedCard = null;
+                return;
+            }
+
+            if (card.cost <= gameState.elixir) {
+                gameState.elixir -= card.cost;
+                updateElixir();
+
+                if (card.type === 'troop') {
+                    spawnUnit(x, y, card, true);
+                } else if (card.type === 'spell') {
+                    castSpell(x, y, card, true);
+                }
+
+                cycleCard(cardIndex);
+            }
+            
+            gameState.selectedCard = null;
+        }
+
+        // Arena click listener for card placement
+        arena.addEventListener('click', (event) => {
+            if (gameState.selectedCard) {
+                handleCardPlacement(event);
+            }
         });
+
+        // Highlight selected card on hover
+        arena.addEventListener('mousemove', (event) => {
+            if (!gameState.selectedCard) {
+                arena.style.cursor = 'default';
+                return;
+            }
+
+            const card = gameState.selectedCard;
+            if (card.type === 'troop') {
+                arena.style.cursor = 'crosshair';
+            } else if (card.type === 'spell') {
+                // Draw a circle for AoE spells
+                // This is a simplified visual. For a full game, you'd add a temporary div.
+                arena.style.cursor = 'copy'; 
+            }
+        });
+
+        // Helper to find a nearby empty spot for spawning
+        function findFreeSpot(x, y, size) {
+            const occupied = gameState.units.filter(u => 
+                u.x > x - 50 && u.x < x + 50 && 
+                u.y > y - 50 && u.y < y + 50 && 
+                u.hp > 0
+            );
+
+            if (occupied.length === 0) {
+                return {x, y};
+            }
+            
+            // Simple logic: just shift slightly if occupied
+            return {
+                x: x + (Math.random() > 0.5 ? size : -size) * 0.1,
+                y: y + (Math.random() > 0.5 ? size : -size) * 0.1
+            };
+        }
 
         function spawnUnit(x, y, card, isPlayer) {
             // Check for collision and find free spot
             const finalPos = findFreeSpot(x, y, 40);
-            
+
             const unit = {
-                x: finalPos.x, 
+                x: finalPos.x,
                 y: finalPos.y,
                 hp: card.hp,
                 maxHp: card.hp,
@@ -627,597 +763,526 @@
                 name: card.name,
                 icon: card.icon,
                 attackCooldown: 0,
-                frozen: 0,
-                rageBoost: 0,
-                poisoned: 0,
+                target: null,
                 element: document.createElement('div')
             };
-            
-            unit.element.className = 'unit' + (isPlayer ? ' player' : ' enemy');
-            unit.element.textContent = card.icon;
-            unit.element.style.left = finalPos.x + 'px';
-            unit.element.style.top = finalPos.y + 'px';
-            document.getElementById('arena').appendChild(unit.element);
+
+            unit.element.className = `unit ${isPlayer ? 'player' : 'enemy'}`;
+            unit.element.style.left = `${unit.x - 20}px`;
+            unit.element.style.top = `${unit.y - 20}px`;
+            unit.element.textContent = unit.icon;
+
+            // HP Bar
+            const hpEl = document.createElement('div');
+            hpEl.className = 'unit-hp';
+            const hpBarEl = document.createElement('div');
+            hpBarEl.className = 'unit-hp-bar';
+            hpBarEl.style.width = '100%';
+            hpEl.appendChild(hpBarEl);
+            unit.hpBarEl = hpBarEl;
+            unit.element.appendChild(hpEl);
+
+            arena.appendChild(unit.element);
             gameState.units.push(unit);
         }
 
-        function findFreeSpot(x, y, radius) {
-            const maxAttempts = 20;
-            for (let i = 0; i < maxAttempts; i++) {
-                const angle = (Math.PI * 2 * i) / maxAttempts;
-                const testX = x + Math.cos(angle) * (radius * i / 4);
-                const testY = y + Math.sin(angle) * (radius * i / 4);
+        function findTarget(unit) {
+            const enemies = [...gameState.units.filter(u => u.isPlayer !== unit.isPlayer && u.hp > 0), 
+                             ...gameState.towers.filter(t => t.isPlayer !== unit.isPlayer && t.hp > 0)];
+
+            let nearestTarget = null;
+            let minDist = Infinity;
+            
+            // Troop Target Priority: Troops > Towers
+            for (const target of enemies) {
+                // Ignore King Tower until Princess Tower is down
+                if (target.isKing && !gameState.towers.some(t => t.isPlayer !== unit.isPlayer && !t.isKing && t.hp > 0)) {
+                    // Proceed to King Tower only if all other towers are destroyed
+                } else if (target.isKing && gameState.towers.some(t => t.isPlayer !== unit.isPlayer && !t.isKing && t.hp > 0)) {
+                    continue; // Skip King Tower if a Princess Tower is still up
+                }
+
+                const dx = (target.x || target.x + 30) - unit.x;
+                const dy = (target.y || target.y + 40) - unit.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist <= unit.range && dist < minDist) {
+                    minDist = dist;
+                    nearestTarget = target;
+                }
+            }
+            
+            // If no immediate target in range, find the nearest enemy (units first)
+            if (!nearestTarget) {
+                for (const target of enemies) {
+                     // Check the king tower logic again for initial movement
+                    if (target.isKing && gameState.towers.some(t => t.isPlayer !== unit.isPlayer && !t.isKing && t.hp > 0)) {
+                        continue;
+                    }
+
+                    const dx = (target.x || target.x + 30) - unit.x;
+                    const dy = (target.y || target.y + 40) - unit.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestTarget = target;
+                    }
+                }
+            }
+
+            return nearestTarget;
+        }
+
+        function moveUnit(unit, deltaTime) {
+            if (unit.target) {
+                // If target is in range, stop and attack
+                const targetX = unit.target.x || unit.target.x + 30;
+                const targetY = unit.target.y || unit.target.y + 40;
+
+                const dx = targetX - unit.x;
+                const dy = targetY - unit.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist <= unit.range) {
+                    // Stop movement
+                    return; 
+                }
+
+                // Move towards target
+                const angle = Math.atan2(dy, dx);
+                const moveDist = unit.speed * deltaTime * 0.1; // Scale speed by deltaTime
+                unit.x += Math.cos(angle) * moveDist;
+                unit.y += Math.sin(angle) * moveDist;
+
+            } else {
+                // No target, move towards the nearest enemy Princess Tower
+                const enemyTowers = gameState.towers.filter(t => t.isPlayer !== unit.isPlayer && !t.isKing && t.hp > 0);
                 
-                let collides = false;
-                for (let unit of gameState.units) {
-                    const dist = Math.sqrt((unit.x - testX) ** 2 + (unit.y - testY) ** 2);
-                    if (dist < 35) {
-                        collides = true;
-                        break;
+                let targetTower = null;
+                let minDist = Infinity;
+
+                for (const tower of enemyTowers) {
+                    const dx = tower.x + 30 - unit.x;
+                    const dy = tower.y + 40 - unit.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        targetTower = tower;
                     }
                 }
                 
-                if (!collides) {
-                    return {x: testX, y: testY};
+                // If no princess towers, target the king tower
+                if (!targetTower) {
+                    targetTower = gameState.towers.find(t => t.isPlayer !== unit.isPlayer && t.isKing);
+                }
+
+                if (targetTower) {
+                    const dx = targetTower.x + 30 - unit.x;
+                    const dy = targetTower.y + 40 - unit.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > unit.range) {
+                        const angle = Math.atan2(dy, dx);
+                        const moveDist = unit.speed * deltaTime * 0.1;
+                        unit.x += Math.cos(angle) * moveDist;
+                        unit.y += Math.sin(angle) * moveDist;
+                    }
                 }
             }
-            return {x, y};
+
+            // Simple collision detection/separation (to prevent stacking)
+            let pushX = 0;
+            let pushY = 0;
+            gameState.units.forEach(other => {
+                if (unit !== other) {
+                    const dx2 = unit.x - other.x;
+                    const dy2 = unit.y - other.y;
+                    const distToOther = Math.sqrt(dx2 * dx2 + dy2 * dy2);
+                    
+                    if (distToOther < 40 && distToOther > 0) {
+                        // Push away from each other
+                        const pushForce = (40 - distToOther) / distToOther;
+                        pushX += dx2 * pushForce * 0.5;
+                        pushY += dy2 * pushForce * 0.5;
+                    }
+                }
+            });
+            
+            // Apply movement with separation
+            unit.x += pushX * 0.1;
+            unit.y += pushY * 0.1;
+            
+            // Keep unit within arena bounds (simplified)
+            const arenaWidth = arena.offsetWidth;
+            const arenaHeight = arena.offsetHeight;
+            unit.x = Math.max(20, Math.min(unit.x, arenaWidth - 20));
+            unit.y = Math.max(20, Math.min(unit.y, arenaHeight - 20));
+
+            // Update visual position
+            unit.element.style.left = `${unit.x - 20}px`;
+            unit.element.style.top = `${unit.y - 20}px`;
         }
 
-        function spawnSwarm(x, y, card, isPlayer) {
-            const count = card.count || 5;
-            const radius = 40;
-            for (let i = 0; i < count; i++) {
-                const angle = (Math.PI * 2 * i) / count;
-                const offsetX = Math.cos(angle) * radius;
-                const offsetY = Math.sin(angle) * radius;
-                spawnUnit(x + offsetX, y + offsetY, card, isPlayer);
+        function attackTarget(attacker, target) {
+            const targetX = target.x || target.x + 30;
+            const targetY = target.y || target.y + 40;
+            
+            const dx = targetX - attacker.x;
+            const dy = targetY - attacker.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+
+            if (dist <= attacker.range) {
+                attacker.attackCooldown = 10; // 1 second cooldown (10 frames)
+                dealDamage(target, attacker.damage);
+            }
+        }
+
+        function towerLogic(tower) {
+            if (tower.hp <= 0) return;
+            
+            tower.attackCooldown = Math.max(0, tower.attackCooldown - 1);
+            
+            if (tower.attackCooldown === 0) {
+                // Find nearest enemy unit
+                let nearestEnemy = null;
+                let minDist = tower.range;
+                
+                gameState.units.forEach(unit => {
+                    if (unit.isPlayer !== tower.isPlayer && unit.hp > 0) {
+                        const dx = unit.x - (tower.x + 30);
+                        const dy = unit.y - (tower.y + 40);
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (dist <= tower.range && dist < minDist) {
+                            minDist = dist;
+                            nearestEnemy = unit;
+                        }
+                    }
+                });
+                
+                if (nearestEnemy) {
+                    tower.attackCooldown = 10; // Tower attack speed (1 attack per second)
+                    dealDamage(nearestEnemy, tower.damage);
+                }
             }
         }
 
         function castSpell(x, y, card, isPlayer) {
-            // Visual effect
-            const effect = document.createElement('div');
-            effect.style.position = 'absolute';
-            effect.style.left = (x - card.radius) + 'px';
-            effect.style.top = (y - card.radius) + 'px';
-            effect.style.width = (card.radius * 2) + 'px';
-            effect.style.height = (card.radius * 2) + 'px';
-            effect.style.borderRadius = '50%';
-            effect.style.pointerEvents = 'none';
-            effect.style.zIndex = '50';
+            const effect = {
+                x: x,
+                y: y,
+                radius: card.radius,
+                damage: card.damage,
+                duration: card.duration * 10 || 1, // duration in frames (10 frames = 1 second)
+                card: card,
+                isPlayer: isPlayer,
+                element: document.createElement('div')
+            };
+
+            effect.element.className = 'spell-effect';
+            effect.element.style.width = `${effect.radius * 2}px`;
+            effect.element.style.height = `${effect.radius * 2}px`;
+            effect.element.style.left = `${x - effect.radius}px`;
+            effect.element.style.top = `${y - effect.radius}px`;
+            effect.element.style.opacity = '1';
             
             if (card.name === 'Fireball') {
-                effect.style.background = 'radial-gradient(circle, rgba(255,100,0,0.8), rgba(255,0,0,0.4))';
+                effect.element.style.background = 'radial-gradient(circle, rgba(255,100,0,0.8), rgba(255,0,0,0.5))';
+                applySpellEffect(effect);
+                effect.duration = 1; // Instant spell
             } else if (card.name === 'Arrows') {
-                effect.style.background = 'radial-gradient(circle, rgba(139,69,19,0.6), rgba(101,67,33,0.2))';
-            } else if (card.name === 'Lightning') {
-                effect.style.background = 'radial-gradient(circle, rgba(255,255,0,0.9), rgba(255,215,0,0.4))';
-            } else if (card.name === 'Zap') {
-                effect.style.background = 'radial-gradient(circle, rgba(100,200,255,0.8), rgba(0,150,255,0.3))';
-            } else if (card.name === 'Freeze') {
-                effect.style.background = 'radial-gradient(circle, rgba(0,200,255,0.6), rgba(200,230,255,0.3))';
+                effect.element.style.background = 'radial-gradient(circle, rgba(200,200,200,0.8), rgba(100,100,100,0.5))';
+                applySpellEffect(effect);
+                effect.duration = 1; // Instant spell
             } else if (card.name === 'Rage') {
-                effect.style.background = 'radial-gradient(circle, rgba(255,0,150,0.6), rgba(200,0,100,0.3))';
+                effect.element.style.background = 'radial-gradient(circle, rgba(255,0,150,0.6), rgba(200,0,100,0.3))';
+                // Rage is a persistent effect
+                effect.isPersistent = true;
             } else if (card.name === 'Heal') {
-                effect.style.background = 'radial-gradient(circle, rgba(0,255,100,0.6), rgba(100,255,150,0.3))';
-            } else if (card.name === 'Poison') {
-                effect.style.background = 'radial-gradient(circle, rgba(100,255,0,0.5), rgba(50,200,0,0.2))';
-            } else if (card.name === 'Rocket') {
-                effect.style.background = 'radial-gradient(circle, rgba(255,50,0,0.9), rgba(200,0,0,0.5))';
-            } else if (card.name === 'Clone') {
-                effect.style.background = 'radial-gradient(circle, rgba(200,0,255,0.6), rgba(150,0,200,0.3))';
+                effect.element.style.background = 'radial-gradient(circle, rgba(0,255,100,0.6), rgba(100,255,100,0.3))';
+                applySpellEffect(effect);
+                effect.duration = 1; // Instant spell
             }
             
-            effect.style.animation = 'spellEffect 0.5s ease-out';
-            document.getElementById('arena').appendChild(effect);
-            setTimeout(() => effect.remove(), 500);
-
-            // Apply spell effects
-            if (card.name === 'Freeze') {
-                applyAreaEffect(x, y, card.radius, (target) => {
-                    if (target.isPlayer !== isPlayer) {
-                        target.frozen = card.duration;
-                        target.element.style.filter = 'brightness(0.7) saturate(0.5)';
-                    }
-                });
-            } else if (card.name === 'Rage') {
-                applyAreaEffect(x, y, card.radius, (target) => {
-                    if (target.isPlayer === isPlayer) {
-                        target.rageBoost = card.duration;
-                        target.element.style.filter = 'brightness(1.3) saturate(1.5)';
-                    }
-                });
-            } else if (card.name === 'Heal') {
-                applyAreaEffect(x, y, card.radius, (target) => {
-                    if (target.isPlayer === isPlayer) {
-                        target.hp = Math.min(target.maxHp, target.hp + card.healing);
-                    }
-                });
-            } else if (card.name === 'Poison') {
-                const poisonZone = {
-                    x, y, radius: card.radius, duration: card.duration,
-                    damage: card.damage, isPlayer, tickCounter: 0
-                };
-                gameState.poisonZones = gameState.poisonZones || [];
-                gameState.poisonZones.push(poisonZone);
-            } else {
-                // Damage spells
-                applyAreaEffect(x, y, card.radius, (target) => {
-                    if (target.isPlayer !== isPlayer) {
-                        dealDamage(target, card.damage, target.x || (target.x + 30), target.y || (target.y + 40));
-                    }
-                });
-            }
+            arena.appendChild(effect.element);
+            gameState.effects.push(effect);
         }
 
-        function useSpecial(x, y, card, isPlayer) {
-            if (card.name === 'Mirror' && lastPlayedCard) {
-                const mirrorCard = {...lastPlayedCard};
-                if (mirrorCard.type === 'troop') {
-                    spawnUnit(x, y, mirrorCard, isPlayer);
-                } else if (mirrorCard.type === 'swarm') {
-                    spawnSwarm(x, y, mirrorCard, isPlayer);
-                } else if (mirrorCard.type === 'spell') {
-                    castSpell(x, y, mirrorCard, isPlayer);
-                }
-            } else if (card.name === 'Clone') {
-                applyAreaEffect(x, y, card.radius, (target) => {
-                    if (target.isPlayer === isPlayer && target.hp > 0) {
-                        const cloneCard = {
-                            name: target.name,
-                            hp: target.hp,
-                            damage: target.damage,
-                            speed: target.speed,
-                            range: target.range,
-                            icon: target.icon
-                        };
-                        spawnUnit(target.x + 20, target.y + 20, cloneCard, isPlayer);
+        function applySpellEffect(effect) {
+            // Find all units and towers in the radius
+            const targets = [
+                ...gameState.units.filter(u => u.hp > 0),
+                ...gameState.towers.filter(t => t.hp > 0)
+            ];
+
+            targets.forEach(target => {
+                const targetX = target.x || target.x + 30;
+                const targetY = target.y || target.y + 40;
+
+                const dx = targetX - effect.x;
+                const dy = targetY - effect.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist <= effect.radius) {
+                    if (effect.card.name === 'Fireball' || effect.card.name === 'Arrows') {
+                        // Damage enemy troops/towers
+                        if (target.isPlayer !== effect.isPlayer) {
+                            dealDamage(target, effect.damage);
+                        }
+                    } else if (effect.card.name === 'Heal') {
+                        // Heal friendly troops
+                        if (target.isPlayer === effect.isPlayer) {
+                            dealDamage(target, -effect.damage); // Negative damage is heal
+                        }
+                    } else if (effect.card.name === 'Rage') {
+                        // Rage effect (for units only)
+                        if (target.isPlayer === effect.isPlayer && target.name) {
+                            // Apply a 'rage' flag or modifier to the unit
+                            target.isRaged = true;
+                            target.originalSpeed = target.originalSpeed || target.speed;
+                            target.originalDamage = target.originalDamage || target.damage;
+                            target.speed *= 1.4;
+                            target.damage *= 1.4;
+                        }
                     }
-                });
-            }
-        }
-
-        function applyAreaEffect(x, y, radius, callback) {
-            // Apply to units
-            gameState.units.forEach(unit => {
-                const dist = Math.sqrt((unit.x - x) ** 2 + (unit.y - y) ** 2);
-                if (dist <= radius) {
-                    callback(unit);
-                }
-            });
-
-            // Apply to towers
-            gameState.towers.forEach(tower => {
-                const dist = Math.sqrt((tower.x + 30 - x) ** 2 + (tower.y + 40 - y) ** 2);
-                if (dist <= radius) {
-                    callback(tower);
                 }
             });
         }
 
-        function startElixirGeneration() {
-            setInterval(() => {
-                if (gameState.gameRunning && gameState.elixir < gameState.maxElixir) {
-                    gameState.elixir = Math.min(gameState.maxElixir, gameState.elixir + 1);
-                    updateElixir();
-                }
-            }, 2800);
-        }
-
-        function updateElixir() {
-            document.getElementById('elixirCount').textContent = Math.floor(gameState.elixir);
-            document.getElementById('elixirFill').style.width = (gameState.elixir / gameState.maxElixir * 100) + '%';
-            
-            document.querySelectorAll('.card').forEach((el, i) => {
-                if (gameState.deck[i] && gameState.elixir < gameState.deck[i].cost) {
-                    el.classList.add('disabled');
-                } else {
-                    el.classList.remove('disabled');
-                }
-            });
-        }
-
-        function startTimer() {
-            setInterval(() => {
-                if (gameState.gameRunning) {
-                    gameState.timeLeft--;
-                    const mins = Math.floor(gameState.timeLeft / 60);
-                    const secs = gameState.timeLeft % 60;
-                    document.getElementById('timer').textContent = 
-                        `${mins}:${secs.toString().padStart(2, '0')}`;
-                    
-                    if (gameState.timeLeft <= 0) {
-                        endGame();
-                    }
-                }
-            }, 1000);
-        }
-
-        function startAI() {
-            const settings = difficultySettings[gameState.difficulty];
-            let aiElixir = 5;
-            
-            setInterval(() => {
-                if (gameState.gameRunning) {
-                    aiElixir = Math.min(10, aiElixir + settings.aiElixirMult);
-                    
-                    const card = CARDS[Math.floor(Math.random() * CARDS.length)];
-                    if (aiElixir >= card.cost) {
-                        const arena = document.getElementById('arena');
-                        
-                        if (card.type === 'troop' || card.type === 'swarm') {
-                            // Place troops in AI's territory (top half)
-                            const x = Math.random() * (arena.offsetWidth - 100) + 50;
-                            const y = Math.random() * (arena.offsetHeight / 2 - 100) + 50;
-                            
-                            if (card.type === 'troop') {
-                                spawnUnit(x, y, card, false);
-                            } else {
-                                spawnSwarm(x, y, card, false);
-                            }
-                            aiElixir -= card.cost;
-                        } else if (card.type === 'spell') {
-                            const spellTarget = getAISpellTarget(card, arena);
-                            if (spellTarget) {
-                                castSpell(spellTarget.x, spellTarget.y, card, false);
-                                aiElixir -= card.cost;
-                            }
-                        } else if (card.type === 'special') {
-                            // Don't use special cards for AI (too complex)
-                        }
-                    }
-                }
-            }, settings.aiDelay);
-        }
-
-        function getAISpellTarget(card, arena) {
-            const isDefensiveSpell = ['Freeze', 'Rage', 'Heal'].includes(card.name);
-            
-            if (isDefensiveSpell) {
-                // Target AI's own units that are under attack
-                const aiUnits = gameState.units.filter(u => !u.isPlayer && u.hp > 0);
+        function processSpellEffects() {
+            for (let i = gameState.effects.length - 1; i >= 0; i--) {
+                const effect = gameState.effects[i];
                 
-                if (card.name === 'Freeze') {
-                    // Find cluster of player units threatening AI
-                    const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0 && u.y < arena.offsetHeight / 2);
-                    if (playerUnits.length > 0) {
-                        // Find center of largest cluster
-                        const cluster = findLargestCluster(playerUnits, card.radius);
-                        if (cluster.count >= 2) {
-                            return {x: cluster.x, y: cluster.y};
-                        }
-                    }
-                } else if (card.name === 'Rage' || card.name === 'Heal') {
-                    // Target AI units that are pushing
-                    const pushingUnits = aiUnits.filter(u => u.y > arena.offsetHeight / 3);
-                    if (pushingUnits.length > 0) {
-                        const cluster = findLargestCluster(pushingUnits, card.radius);
-                        if (cluster.count >= 2) {
-                            return {x: cluster.x, y: cluster.y};
-                        }
-                    }
-                }
-            } else {
-                // Offensive spells - target player units or towers
-                const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0);
+                effect.duration--;
                 
-                if (card.name === 'Rocket' || card.name === 'Lightning') {
-                    // High-cost spells: prioritize towers or high-value targets
-                    const playerTowers = gameState.towers.filter(t => t.isPlayer && t.hp > 0 && t.hp < t.maxHp * 0.4);
-                    if (playerTowers.length > 0) {
-                        const tower = playerTowers[0];
-                        return {x: tower.x + 30, y: tower.y + 40};
-                    }
-                    
-                    // Or target expensive units
-                    const expensiveUnits = playerUnits.filter(u => 
-                        ['Giant', 'P.E.K.K.A', 'Golem', 'Sparky', 'Balloon'].includes(u.name)
-                    );
-                    if (expensiveUnits.length > 0) {
-                        return {x: expensiveUnits[0].x, y: expensiveUnits[0].y};
-                    }
-                } else {
-                    // Area damage spells - target clusters
-                    if (playerUnits.length > 0) {
-                        const cluster = findLargestCluster(playerUnits, card.radius);
-                        if (cluster.count >= 2) {
-                            return {x: cluster.x, y: cluster.y};
-                        }
-                        // If no cluster, target any unit
-                        return {x: playerUnits[0].x, y: playerUnits[0].y};
-                    }
+                // Persistent effects (like Rage) need continuous application/checking
+                if (effect.isPersistent) {
+                    applySpellEffect(effect); // Re-apply to all units in range
                 }
-            }
-            
-            return null; // Don't cast if no good target
-        }
 
-        function findLargestCluster(units, radius) {
-            let bestCluster = {x: 0, y: 0, count: 0};
-            
-            for (let unit of units) {
-                let count = 0;
-                let sumX = 0;
-                let sumY = 0;
-                
-                for (let other of units) {
-                    const dist = Math.sqrt((unit.x - other.x) ** 2 + (unit.y - other.y) ** 2);
-                    if (dist <= radius) {
-                        count++;
-                        sumX += other.x;
-                        sumY += other.y;
-                    }
-                }
-                
-                if (count > bestCluster.count) {
-                    bestCluster = {
-                        x: sumX / count,
-                        y: sumY / count,
-                        count: count
-                    };
-                }
-            }
-            
-            return bestCluster;
-        }
+                if (effect.duration <= 0) {
+                    // Clean up rage effect on units that were in the area
+                    if (effect.card.name === 'Rage') {
+                        gameState.units.forEach(unit => {
+                            // Find units near the spell area
+                            const dx = unit.x - effect.x;
+                            const dy = unit.y - effect.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
 
-        function gameLoop() {
-            if (!gameState.gameRunning) return;
-
-            // Update poison zones
-            if (gameState.poisonZones) {
-                gameState.poisonZones.forEach(zone => {
-                    zone.tickCounter++;
-                    if (zone.tickCounter % 30 === 0) { // Damage every 30 frames
-                        applyAreaEffect(zone.x, zone.y, zone.radius, (target) => {
-                            if (target.isPlayer !== zone.isPlayer) {
-                                dealDamage(target, zone.damage, target.x || (target.x + 30), target.y || (target.y + 40));
+                            if (unit.isRaged && dist <= effect.radius) {
+                                // Revert stats
+                                unit.speed = unit.originalSpeed;
+                                unit.damage = unit.originalDamage;
+                                unit.isRaged = false;
+                                delete unit.originalSpeed;
+                                delete unit.originalDamage;
                             }
                         });
                     }
-                    zone.duration--;
-                });
-                gameState.poisonZones = gameState.poisonZones.filter(z => z.duration > 0);
+                    
+                    effect.element.style.opacity = '0';
+                    setTimeout(() => effect.element.remove(), 300);
+                    gameState.effects.splice(i, 1);
+                }
             }
+        }
 
-            // Update towers - make them attack
-            gameState.towers.forEach(tower => {
-                if (tower.hp <= 0) return;
+        function aiThink() {
+            if (!gameState.gameRunning) return;
 
-                tower.attackCooldown = Math.max(0, tower.attackCooldown - 1);
+            // Simplified AI logic based on difficulty
+            const enemyElixir = gameState.elixir;
+            const enemyUnits = gameState.units.filter(u => !u.isPlayer && u.hp > 0);
+            const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0);
+            const aiDeck = gameState.enemyDeck; // Use the simplified enemy deck for random card selection
 
-                if (tower.attackCooldown === 0) {
-                    // Find nearest enemy unit
-                    let nearestEnemy = null;
-                    let minDist = tower.range;
-
-                    gameState.units.forEach(unit => {
-                        if (unit.isPlayer !== tower.isPlayer && unit.hp > 0) {
-                            const dx = unit.x - (tower.x + 30);
-                            const dy = unit.y - (tower.y + 40);
-                            const dist = Math.sqrt(dx * dx + dy * dy);
-
-                            if (dist < minDist) {
-                                minDist = dist;
-                                nearestEnemy = unit;
-                            }
-                        }
-                    });
-
-                    // Attack if enemy in range
-                    if (nearestEnemy) {
-                        const proj = {
-                            x: tower.x + 30,
-                            y: tower.y + 40,
-                            targetX: nearestEnemy.x,
-                            targetY: nearestEnemy.y,
-                            damage: tower.damage,
-                            target: nearestEnemy,
-                            element: document.createElement('div')
-                        };
-                        proj.element.className = 'projectile';
-                        proj.element.style.left = proj.x + 'px';
-                        proj.element.style.top = proj.y + 'px';
-                        proj.element.style.background = tower.isPlayer ? '#4CAF50' : '#f44336';
-                        document.getElementById('arena').appendChild(proj.element);
-                        gameState.projectiles.push(proj);
-                        tower.attackCooldown = 60; // Tower attack speed
+            // AI Deployment Decision
+            if (enemyElixir >= 3 && Math.random() < 0.5) { // 50% chance to try playing a card every second
+                
+                let playableCards = CARD_LIST.filter(c => c.cost <= enemyElixir);
+                
+                // Add difficulty modifier
+                if (gameState.difficulty === 'easy') {
+                    playableCards = playableCards.filter(c => c.cost <= 4);
+                } else if (gameState.difficulty === 'hard') {
+                    // Prioritize high-cost cards if elixir is high
+                    if (enemyElixir >= 7) {
+                        playableCards = CARD_LIST.filter(c => c.cost >= 5);
                     }
                 }
-            });
+                
+                if (playableCards.length > 0) {
+                    const card = playableCards[Math.floor(Math.random() * playableCards.length)];
+                    
+                    // AI card placement logic (always on the enemy side of the bridge)
+                    const arenaWidth = arena.offsetWidth;
+                    const arenaHeight = arena.offsetHeight;
+                    
+                    let deployX, deployY;
+                    
+                    if (card.type === 'troop') {
+                        // Deploy troops near king tower or near a bridge (randomized)
+                        if (Math.random() < 0.5) {
+                            // Near king tower
+                            deployX = arenaWidth / 2 - 20 + (Math.random() * 80 - 40);
+                            deployY = 50 + (Math.random() * 50);
+                        } else {
+                            // Near bridge
+                            deployX = Math.random() < 0.5 ? 100 + (Math.random() * 100) : arenaWidth - 200 - (Math.random() * 100);
+                            deployY = arenaHeight / 2 - 50 - (Math.random() * 50);
+                        }
+                        
+                        spawnUnit(deployX, deployY, card, false);
+                        
+                    } else if (card.type === 'spell') {
+                        // Cast spells on enemy troops/towers (simplified: just on player's side)
+                        let targetPosition = null;
+                        
+                        // 1. Target player's tower if spell is offensive (Fireball, Arrows)
+                        if (card.name === 'Fireball' || card.name === 'Arrows') {
+                            const playerTowers = gameState.towers.filter(t => t.isPlayer && !t.isKing && t.hp > 0);
+                            if (playerTowers.length > 0) {
+                                const targetTower = playerTowers[Math.floor(Math.random() * playerTowers.length)];
+                                targetPosition = {x: targetTower.x + 30, y: targetTower.y + 40};
+                            }
+                        }
+                        
+                        // 2. Target largest cluster of player units if offensive
+                        const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0);
+                        if (!targetPosition && playerUnits.length >= 2) {
+                            const cluster = findLargestCluster(playerUnits, card.radius);
+                            if (cluster.count >= 2) {
+                                targetPosition = {x: cluster.x, y: cluster.y};
+                            }
+                        }
+                        
+                        // 3. Cast support spells (Rage/Heal) on its own troops (simplified)
+                        if ((card.name === 'Rage' || card.name === 'Heal') && enemyUnits.length > 0) {
+                            targetPosition = {x: enemyUnits[0].x, y: enemyUnits[0].y};
+                        }
 
-            // Update units
+                        if (targetPosition) {
+                            castSpell(targetPosition.x, targetPosition.y, card, false);
+                        }
+                    }
+                    
+                    gameState.elixir -= card.cost;
+                    updateElixir();
+                }
+            }
+        }
+
+        function findLargestCluster(units, radius) {
+            let maxCount = 0;
+            let bestX = 0;
+            let bestY = 0;
+            
+            for (const unit of units) {
+                let currentCount = 0;
+                let sumX = 0;
+                let sumY = 0;
+                
+                for (const otherUnit of units) {
+                    const dx = otherUnit.x - unit.x;
+                    const dy = otherUnit.y - unit.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist <= radius) {
+                        currentCount++;
+                        sumX += otherUnit.x;
+                        sumY += otherUnit.y;
+                    }
+                }
+
+                if (currentCount > maxCount) {
+                    maxCount = currentCount;
+                    bestX = sumX / currentCount;
+                    bestY = sumY / currentCount;
+                }
+            }
+            
+            return {count: maxCount, x: bestX, y: bestY};
+        }
+
+        // Main Game Loop
+        let lastTime = 0;
+        function gameLoop(timestamp) {
+            if (!gameState.gameRunning) return;
+            
+            const deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+
+            // Update cooldowns
+            updateCooldowns(deltaTime);
+            renderHand(); // Update card timers
+
+            // Update Units
             gameState.units.forEach(unit => {
                 if (unit.hp <= 0) return;
-
-                // Update status effects
-                if (unit.frozen > 0) {
-                    unit.frozen--;
-                    if (unit.frozen === 0) {
-                        unit.element.style.filter = '';
-                    }
-                    return; // Skip movement and attack when frozen
-                }
-
-                if (unit.rageBoost > 0) {
-                    unit.rageBoost--;
-                    if (unit.rageBoost === 0) {
-                        unit.element.style.filter = '';
-                    }
-                }
-
-                // Find target
-                let target = findTarget(unit);
                 
-                if (target) {
-                    const dx = target.x - unit.x;
-                    const dy = target.y - unit.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-
-                    if (dist <= unit.range) {
-                        // Attack
-                        const attackSpeed = unit.rageBoost > 0 ? 20 : 30;
-                        if (unit.attackCooldown <= 0) {
-                            attack(unit, target);
-                            unit.attackCooldown = attackSpeed;
-                        }
-                    } else {
-                        // Move towards target with collision avoidance
-                        const angle = Math.atan2(dy, dx);
-                        const moveSpeed = unit.rageBoost > 0 ? unit.speed * 1.5 : unit.speed;
-                        let newX = unit.x + Math.cos(angle) * moveSpeed;
-                        let newY = unit.y + Math.sin(angle) * moveSpeed;
-
-                        // Check collision with other units - push apart
-                        let pushX = 0;
-                        let pushY = 0;
-                        for (let other of gameState.units) {
-                            if (other !== unit && other.hp > 0) {
-                                const dx2 = unit.x - other.x;
-                                const dy2 = unit.y - other.y;
-                                const distToOther = Math.sqrt(dx2 * dx2 + dy2 * dy2);
-                                
-                                if (distToOther < 40 && distToOther > 0) {
-                                    // Push away from each other
-                                    const pushForce = (40 - distToOther) / distToOther;
-                                    pushX += dx2 * pushForce * 0.5;
-                                    pushY += dy2 * pushForce * 0.5;
-                                }
-                            }
-                        }
-
-                        // Apply movement with separation
-                        unit.x = newX + pushX;
-                        unit.y = newY + pushY;
-                    }
-                }
-
                 unit.attackCooldown = Math.max(0, unit.attackCooldown - 1);
-                unit.element.style.left = unit.x + 'px';
-                unit.element.style.top = unit.y + 'px';
+
+                // 1. Find or maintain target
+                if (!unit.target || unit.target.hp <= 0) {
+                    unit.target = findTarget(unit);
+                }
+
+                // 2. Move
+                moveUnit(unit, deltaTime);
+
+                // 3. Attack
+                if (unit.target && unit.attackCooldown === 0) {
+                    attackTarget(unit, unit.target);
+                }
                 
-                // Dynamic z-index based on Y position for proper layering
-                unit.element.style.zIndex = Math.floor(unit.y);
+                // Update HP visual
+                const hpPercent = (unit.hp / unit.maxHp) * 100;
+                unit.hpBarEl.style.width = `${hpPercent}%`;
             });
+            
+            // Update Towers
+            gameState.towers.forEach(towerLogic);
 
-            // Update projectiles
-            gameState.projectiles.forEach(proj => {
-                const dx = proj.targetX - proj.x;
-                const dy = proj.targetY - proj.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
+            // Process Spells
+            processSpellEffects();
 
-                if (dist < 5 || proj.target.hp <= 0) {
-                    if (proj.target.hp > 0) {
-                        dealDamage(proj.target, proj.damage, proj.x, proj.y);
-                    }
-                    proj.element.remove();
-                    proj.dead = true;
-                } else {
-                    const angle = Math.atan2(dy, dx);
-                    proj.x += Math.cos(angle) * 8;
-                    proj.y += Math.sin(angle) * 8;
-                    proj.element.style.left = proj.x + 'px';
-                    proj.element.style.top = proj.y + 'px';
+            // Cleanup destroyed units
+            for (let i = gameState.units.length - 1; i >= 0; i--) {
+                const unit = gameState.units[i];
+                if (unit.hp <= 0 && unit.element.parentElement) {
+                    unit.element.remove();
+                    gameState.units.splice(i, 1);
                 }
-            });
-
-            // Clean up dead entities
-            gameState.units = gameState.units.filter(u => {
-                if (u.hp <= 0) {
-                    u.element.remove();
-                    return false;
-                }
-                return true;
-            });
-
-            gameState.projectiles = gameState.projectiles.filter(p => !p.dead);
+            }
 
             requestAnimationFrame(gameLoop);
         }
 
-        function findTarget(unit) {
-            let closest = null;
-            let minDist = Infinity;
-
-            // Check towers
-            gameState.towers.forEach(tower => {
-                if (tower.isPlayer !== unit.isPlayer && tower.hp > 0) {
-                    const dist = Math.sqrt((tower.x - unit.x) ** 2 + (tower.y - unit.y) ** 2);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closest = tower;
-                    }
-                }
-            });
-
-            // Check units
-            gameState.units.forEach(other => {
-                if (other.isPlayer !== unit.isPlayer && other.hp > 0) {
-                    const dist = Math.sqrt((other.x - unit.x) ** 2 + (other.y - unit.y) ** 2);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        closest = other;
-                    }
-                }
-            });
-
-            return closest;
-        }
-
-        function attack(unit, target) {
-            if (unit.range > 50) {
-                // Ranged attack - create projectile
-                const proj = {
-                    x: unit.x,
-                    y: unit.y,
-                    targetX: target.x || target.x + 30,
-                    targetY: target.y || target.y + 40,
-                    damage: unit.damage,
-                    target: target,
-                    element: document.createElement('div')
-                };
-                proj.element.className = 'projectile';
-                proj.element.style.left = proj.x + 'px';
-                proj.element.style.top = proj.y + 'px';
-                document.getElementById('arena').appendChild(proj.element);
-                gameState.projectiles.push(proj);
-            } else {
-                // Melee attack
-                dealDamage(target, unit.damage, target.x || target.x + 30, target.y || target.y + 40);
-            }
-        }
-
-        function dealDamage(target, damage, x, y) {
+        function dealDamage(target, damage) {
             target.hp -= damage;
             
-            // Show damage text
-            const damageText = document.createElement('div');
-            damageText.className = 'damage-text';
-            damageText.textContent = '-' + damage;
-            damageText.style.left = x + 'px';
-            damageText.style.top = y + 'px';
-            document.getElementById('arena').appendChild(damageText);
-            setTimeout(() => damageText.remove(), 1000);
-
-            if (target.element && target.element.querySelector) {
-                const hpEl = target.element.querySelector('.tower-hp');
-                if (hpEl) {
-                    hpEl.textContent = Math.max(0, target.hp);
-                }
+            // Healing logic (negative damage)
+            if (damage < 0 && target.hp > target.maxHp) {
+                target.hp = target.maxHp;
             }
 
-            if (target.hp <= 0 && target.isKing !== undefined) {
-                // Tower destroyed
-                if (target.isKing) {
-                    if (target.isPlayer) {
-                        gameState.enemyCrowns = 3;
-                    } else {
-                        gameState.playerCrowns = 3;
+            // Visual update for towers
+            if (target.tower) {
+                target.hpEl.textContent = `${Math.max(0, target.hp)}`;
+            }
+
+            if (target.hp <= 0) {
+                // If it's a tower, check for game end
+                if (target.element.classList.contains('tower')) {
+                    if (target.isKing) {
+                        // King tower destroyed, immediate game end
+                        endGame(); 
+                        return;
                     }
-                    endGame();
-                } else {
-                    if (target.isPlayer) {
+                    
+                    // Princess tower destroyed, give a crown and make king tower targetable
+                    if (!target.isPlayer) {
                         gameState.enemyCrowns++;
                     } else {
                         gameState.playerCrowns++;
@@ -1235,6 +1300,8 @@
 
         function endGame() {
             gameState.gameRunning = false;
+            clearInterval(gameState.elixirInterval); // Stop elixir generation
+            
             const gameOver = document.getElementById('gameOver');
             const text = document.getElementById('gameOverText');
             const stats = document.getElementById('gameOverStats');
@@ -1251,9 +1318,10 @@
             }
             
             stats.textContent = `Final Score: ${gameState.playerCrowns} - ${gameState.enemyCrowns}`;
-            gameOver.style.display = 'block';
+            gameOver.style.display = 'flex';
         }
 
+        // Initialize display
         updateElixir();
     </script>
 </body>
