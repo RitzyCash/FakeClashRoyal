@@ -331,6 +331,17 @@
             }
         }
 
+        @keyframes spellEffect {
+            0% {
+                transform: scale(0);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
         #crownCount {
             display: flex;
             gap: 30px;
@@ -496,6 +507,9 @@
         function createTower(x, y, hp, isPlayer, isKing) {
             const tower = {
                 x, y, hp, maxHp: hp, isPlayer, isKing,
+                attackCooldown: 0,
+                damage: 50,
+                range: 200,
                 element: document.createElement('div')
             };
             tower.element.className = 'tower' + (isPlayer ? ' player' : '');
@@ -511,8 +525,11 @@
             deck.innerHTML = '';
             gameState.deck = [];
             
+            // Create deck with unique cards
+            const availableCards = [...CARDS];
             for (let i = 0; i < 4; i++) {
-                const card = CARDS[Math.floor(Math.random() * CARDS.length)];
+                const randomIndex = Math.floor(Math.random() * availableCards.length);
+                const card = availableCards.splice(randomIndex, 1)[0];
                 gameState.deck.push({...card});
                 const cardEl = document.createElement('div');
                 cardEl.className = 'card';
@@ -580,8 +597,12 @@
         });
 
         function spawnUnit(x, y, card, isPlayer) {
+            // Check for collision and find free spot
+            const finalPos = findFreeSpot(x, y, 40);
+            
             const unit = {
-                x, y,
+                x: finalPos.x, 
+                y: finalPos.y,
                 hp: card.hp,
                 maxHp: card.hp,
                 damage: card.damage,
@@ -599,10 +620,33 @@
             
             unit.element.className = 'unit' + (isPlayer ? ' player' : ' enemy');
             unit.element.textContent = card.icon;
-            unit.element.style.left = x + 'px';
-            unit.element.style.top = y + 'px';
+            unit.element.style.left = finalPos.x + 'px';
+            unit.element.style.top = finalPos.y + 'px';
             document.getElementById('arena').appendChild(unit.element);
             gameState.units.push(unit);
+        }
+
+        function findFreeSpot(x, y, radius) {
+            const maxAttempts = 20;
+            for (let i = 0; i < maxAttempts; i++) {
+                const angle = (Math.PI * 2 * i) / maxAttempts;
+                const testX = x + Math.cos(angle) * (radius * i / 4);
+                const testY = y + Math.sin(angle) * (radius * i / 4);
+                
+                let collides = false;
+                for (let unit of gameState.units) {
+                    const dist = Math.sqrt((unit.x - testX) ** 2 + (unit.y - testY) ** 2);
+                    if (dist < 35) {
+                        collides = true;
+                        break;
+                    }
+                }
+                
+                if (!collides) {
+                    return {x: testX, y: testY};
+                }
+            }
+            return {x, y};
         }
 
         function spawnSwarm(x, y, card, isPlayer) {
@@ -788,7 +832,16 @@
                         const arena = document.getElementById('arena');
                         const x = Math.random() * (arena.offsetWidth - 100) + 50;
                         const y = Math.random() * (arena.offsetHeight / 2 - 100) + 50;
-                        spawnUnit(x, y, card, false);
+                        
+                        if (card.type === 'troop') {
+                            spawnUnit(x, y, card, false);
+                        } else if (card.type === 'swarm') {
+                            spawnSwarm(x, y, card, false);
+                        } else if (card.type === 'spell') {
+                            // AI targets player units or towers
+                            const targetY = arena.offsetHeight * 0.75;
+                            castSpell(x, targetY, card, false);
+                        }
                         aiElixir -= card.cost;
                     }
                 }
@@ -813,6 +866,52 @@
                 });
                 gameState.poisonZones = gameState.poisonZones.filter(z => z.duration > 0);
             }
+
+            // Update towers - make them attack
+            gameState.towers.forEach(tower => {
+                if (tower.hp <= 0) return;
+
+                tower.attackCooldown = Math.max(0, tower.attackCooldown - 1);
+
+                if (tower.attackCooldown === 0) {
+                    // Find nearest enemy unit
+                    let nearestEnemy = null;
+                    let minDist = tower.range;
+
+                    gameState.units.forEach(unit => {
+                        if (unit.isPlayer !== tower.isPlayer && unit.hp > 0) {
+                            const dx = unit.x - (tower.x + 30);
+                            const dy = unit.y - (tower.y + 40);
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < minDist) {
+                                minDist = dist;
+                                nearestEnemy = unit;
+                            }
+                        }
+                    });
+
+                    // Attack if enemy in range
+                    if (nearestEnemy) {
+                        const proj = {
+                            x: tower.x + 30,
+                            y: tower.y + 40,
+                            targetX: nearestEnemy.x,
+                            targetY: nearestEnemy.y,
+                            damage: tower.damage,
+                            target: nearestEnemy,
+                            element: document.createElement('div')
+                        };
+                        proj.element.className = 'projectile';
+                        proj.element.style.left = proj.x + 'px';
+                        proj.element.style.top = proj.y + 'px';
+                        proj.element.style.background = tower.isPlayer ? '#4CAF50' : '#f44336';
+                        document.getElementById('arena').appendChild(proj.element);
+                        gameState.projectiles.push(proj);
+                        tower.attackCooldown = 60; // Tower attack speed
+                    }
+                }
+            });
 
             // Update units
             gameState.units.forEach(unit => {
@@ -850,11 +949,32 @@
                             unit.attackCooldown = attackSpeed;
                         }
                     } else {
-                        // Move towards target
+                        // Move towards target with collision avoidance
                         const angle = Math.atan2(dy, dx);
                         const moveSpeed = unit.rageBoost > 0 ? unit.speed * 1.5 : unit.speed;
-                        unit.x += Math.cos(angle) * moveSpeed;
-                        unit.y += Math.sin(angle) * moveSpeed;
+                        const newX = unit.x + Math.cos(angle) * moveSpeed;
+                        const newY = unit.y + Math.sin(angle) * moveSpeed;
+
+                        // Check collision with other units
+                        let canMove = true;
+                        for (let other of gameState.units) {
+                            if (other !== unit && other.hp > 0) {
+                                const distToOther = Math.sqrt((other.x - newX) ** 2 + (other.y - newY) ** 2);
+                                if (distToOther < 30) {
+                                    canMove = false;
+                                    // Try to move around
+                                    const avoidAngle = angle + (Math.random() > 0.5 ? 0.5 : -0.5);
+                                    unit.x += Math.cos(avoidAngle) * (moveSpeed * 0.5);
+                                    unit.y += Math.sin(avoidAngle) * (moveSpeed * 0.5);
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (canMove) {
+                            unit.x = newX;
+                            unit.y = newY;
+                        }
                     }
                 }
 
@@ -869,14 +989,16 @@
                 const dy = proj.targetY - proj.y;
                 const dist = Math.sqrt(dx * dx + dy * dy);
 
-                if (dist < 5) {
-                    dealDamage(proj.target, proj.damage, proj.x, proj.y);
+                if (dist < 5 || proj.target.hp <= 0) {
+                    if (proj.target.hp > 0) {
+                        dealDamage(proj.target, proj.damage, proj.x, proj.y);
+                    }
                     proj.element.remove();
                     proj.dead = true;
                 } else {
                     const angle = Math.atan2(dy, dx);
-                    proj.x += Math.cos(angle) * 5;
-                    proj.y += Math.sin(angle) * 5;
+                    proj.x += Math.cos(angle) * 8;
+                    proj.y += Math.sin(angle) * 8;
                     proj.element.style.left = proj.x + 'px';
                     proj.element.style.top = proj.y + 'px';
                 }
