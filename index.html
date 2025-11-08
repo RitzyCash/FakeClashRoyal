@@ -830,22 +830,121 @@
                     const card = CARDS[Math.floor(Math.random() * CARDS.length)];
                     if (aiElixir >= card.cost) {
                         const arena = document.getElementById('arena');
-                        const x = Math.random() * (arena.offsetWidth - 100) + 50;
-                        const y = Math.random() * (arena.offsetHeight / 2 - 100) + 50;
                         
-                        if (card.type === 'troop') {
-                            spawnUnit(x, y, card, false);
-                        } else if (card.type === 'swarm') {
-                            spawnSwarm(x, y, card, false);
+                        if (card.type === 'troop' || card.type === 'swarm') {
+                            // Place troops in AI's territory (top half)
+                            const x = Math.random() * (arena.offsetWidth - 100) + 50;
+                            const y = Math.random() * (arena.offsetHeight / 2 - 100) + 50;
+                            
+                            if (card.type === 'troop') {
+                                spawnUnit(x, y, card, false);
+                            } else {
+                                spawnSwarm(x, y, card, false);
+                            }
+                            aiElixir -= card.cost;
                         } else if (card.type === 'spell') {
-                            // AI targets player units or towers
-                            const targetY = arena.offsetHeight * 0.75;
-                            castSpell(x, targetY, card, false);
+                            const spellTarget = getAISpellTarget(card, arena);
+                            if (spellTarget) {
+                                castSpell(spellTarget.x, spellTarget.y, card, false);
+                                aiElixir -= card.cost;
+                            }
+                        } else if (card.type === 'special') {
+                            // Don't use special cards for AI (too complex)
                         }
-                        aiElixir -= card.cost;
                     }
                 }
             }, settings.aiDelay);
+        }
+
+        function getAISpellTarget(card, arena) {
+            const isDefensiveSpell = ['Freeze', 'Rage', 'Heal'].includes(card.name);
+            
+            if (isDefensiveSpell) {
+                // Target AI's own units that are under attack
+                const aiUnits = gameState.units.filter(u => !u.isPlayer && u.hp > 0);
+                
+                if (card.name === 'Freeze') {
+                    // Find cluster of player units threatening AI
+                    const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0 && u.y < arena.offsetHeight / 2);
+                    if (playerUnits.length > 0) {
+                        // Find center of largest cluster
+                        const cluster = findLargestCluster(playerUnits, card.radius);
+                        if (cluster.count >= 2) {
+                            return {x: cluster.x, y: cluster.y};
+                        }
+                    }
+                } else if (card.name === 'Rage' || card.name === 'Heal') {
+                    // Target AI units that are pushing
+                    const pushingUnits = aiUnits.filter(u => u.y > arena.offsetHeight / 3);
+                    if (pushingUnits.length > 0) {
+                        const cluster = findLargestCluster(pushingUnits, card.radius);
+                        if (cluster.count >= 2) {
+                            return {x: cluster.x, y: cluster.y};
+                        }
+                    }
+                }
+            } else {
+                // Offensive spells - target player units or towers
+                const playerUnits = gameState.units.filter(u => u.isPlayer && u.hp > 0);
+                
+                if (card.name === 'Rocket' || card.name === 'Lightning') {
+                    // High-cost spells: prioritize towers or high-value targets
+                    const playerTowers = gameState.towers.filter(t => t.isPlayer && t.hp > 0 && t.hp < t.maxHp * 0.4);
+                    if (playerTowers.length > 0) {
+                        const tower = playerTowers[0];
+                        return {x: tower.x + 30, y: tower.y + 40};
+                    }
+                    
+                    // Or target expensive units
+                    const expensiveUnits = playerUnits.filter(u => 
+                        ['Giant', 'P.E.K.K.A', 'Golem', 'Sparky', 'Balloon'].includes(u.name)
+                    );
+                    if (expensiveUnits.length > 0) {
+                        return {x: expensiveUnits[0].x, y: expensiveUnits[0].y};
+                    }
+                } else {
+                    // Area damage spells - target clusters
+                    if (playerUnits.length > 0) {
+                        const cluster = findLargestCluster(playerUnits, card.radius);
+                        if (cluster.count >= 2) {
+                            return {x: cluster.x, y: cluster.y};
+                        }
+                        // If no cluster, target any unit
+                        return {x: playerUnits[0].x, y: playerUnits[0].y};
+                    }
+                }
+            }
+            
+            return null; // Don't cast if no good target
+        }
+
+        function findLargestCluster(units, radius) {
+            let bestCluster = {x: 0, y: 0, count: 0};
+            
+            for (let unit of units) {
+                let count = 0;
+                let sumX = 0;
+                let sumY = 0;
+                
+                for (let other of units) {
+                    const dist = Math.sqrt((unit.x - other.x) ** 2 + (unit.y - other.y) ** 2);
+                    if (dist <= radius) {
+                        count++;
+                        sumX += other.x;
+                        sumY += other.y;
+                    }
+                }
+                
+                if (count > bestCluster.count) {
+                    bestCluster = {
+                        x: sumX / count,
+                        y: sumY / count,
+                        count: count
+                    };
+                }
+            }
+            
+            return bestCluster;
         }
 
         function gameLoop() {
